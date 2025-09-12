@@ -1,0 +1,69 @@
+package principal;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.Scanner;
+
+public class Principal {
+
+    public static void main(String[] args) {
+        // 1. Coletar os dados do usuário
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("--- Cadastro de Novo Usuário ---");
+        System.out.print("Nome completo: ");
+        String nome = scanner.nextLine();
+
+        System.out.print("CPF: ");
+        String cpf = scanner.nextLine();
+
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+
+        System.out.print("Login: ");
+        String login = scanner.nextLine();
+
+        System.out.print("Senha: ");
+        String senha = scanner.nextLine();
+        
+        scanner.close();
+
+        // 2. Conectar com o banco de dados
+        Conexao fabricaDeConexoes = new Conexao();
+        Connection conexao = fabricaDeConexoes.getConexao();
+
+        // Se a conexão falhar, o programa para aqui
+        if (conexao == null) {
+            return;
+        }
+
+        // 3. Preparar e executar o comando SQL para inserir os dados
+        try {
+            // O comando SQL. Os "?" são espaços que vamos preencher de forma segura.
+            String sql = "INSERT INTO USUARIOS (nome_completo, cpf, email, login, senha, perfil) VALUES (?, ?, ?, ?, ?, ?)";
+
+            // PreparedStatement é um objeto que leva seu comando para o banco de forma segura
+            PreparedStatement stmt = conexao.prepareStatement(sql);
+            
+            // Preenchendo os espaços "?" na ordem
+            stmt.setString(1, nome);
+            stmt.setString(2, cpf);
+            stmt.setString(3, email);
+            stmt.setString(4, login);
+            stmt.setString(5, senha);
+            stmt.setString(6, "colaborador"); // Definindo um perfil padrão
+
+            // Executa o comando no banco de dados
+            stmt.execute();
+
+            System.out.println("\nUsuário cadastrado com sucesso!");
+
+            // 4. Fechar a conexão
+            stmt.close();
+            conexao.close();
+
+        } catch (Exception e) {
+            System.out.println("Erro ao cadastrar usuário: " + e.getMessage());
+        }
+    }
+}

@@ -1,0 +1,61 @@
+package view;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import dao.ProjetoDAO;
+import model.Projeto;
+
+import java.awt.*;
+import java.util.List;
+
+public class TelaRelatorioAtrasos extends JFrame {
+
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+
+    public TelaRelatorioAtrasos() {
+        setTitle("Relatório - Projetos com Risco de Atraso");
+        setSize(800, 500);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Apenas fecha esta janela
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        // --- Tabela ---
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("ID do Projeto");
+        modeloTabela.addColumn("Nome do Projeto");
+        modeloTabela.addColumn("Gerente Responsável");
+        modeloTabela.addColumn("Data de Término Prevista");
+        modeloTabela.addColumn("Status Atual");
+
+        tabela = new JTable(modeloTabela);
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        carregarDados();
+        
+        setVisible(true);
+    }
+
+    private void carregarDados() {
+        modeloTabela.setRowCount(0); // Limpa a tabela
+        
+        ProjetoDAO projetoDAO = new ProjetoDAO();
+        List<Projeto> projetosAtrasados = projetoDAO.listarProjetosEmRisco();
+
+        if (projetosAtrasados.isEmpty()) {
+            // Opcional: mostrar uma mensagem se não houver projetos atrasados.
+            JOptionPane.showMessageDialog(this, "Nenhum projeto com risco de atraso encontrado!");
+        } else {
+            for (Projeto p : projetosAtrasados) {
+                modeloTabela.addRow(new Object[]{
+                    p.getId(),
+                    p.getNome(),
+                    p.getGerente().getNomeCompleto(),
+                    p.getDataTerminoPrevista(),
+                    p.getStatus()
+                });
+            }
+        }
+    }
+}

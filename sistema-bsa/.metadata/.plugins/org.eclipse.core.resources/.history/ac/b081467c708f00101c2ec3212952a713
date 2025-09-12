@@ -1,0 +1,112 @@
+package conexaodb;
+
+import javax.swing.*;
+
+import model.Usuario;
+import view.TelaListaUsuarios;
+
+import java.awt.*;
+
+public class TelaPrincipal extends JFrame {
+
+    private Usuario usuarioLogado;
+
+    // --- Vamos declarar os itens de menu como variáveis da classe ---
+    private JMenuItem itemUsuario, itemProjeto, itemEquipe, itemTarefa;
+    private JMenuItem itemAlocacao;
+    private JMenuItem relatorioAtraso, relatorioStatus, relatorioDesempenho;
+
+    public TelaPrincipal(Usuario usuario) {
+        this.usuarioLogado = usuario;
+
+        setTitle("Sistema de Gestão de Projetos - Bem-vindo, " + usuarioLogado.getNomeCompleto());
+        setSize(1024, 768);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        // --- Barra de Menus ---
+        JMenuBar menuBar = new JMenuBar();
+        setJMenuBar(menuBar);
+
+        // --- Menu Cadastros ---
+        JMenu menuCadastros = new JMenu("Cadastros");
+        menuBar.add(menuCadastros);
+
+        itemUsuario = new JMenuItem("Usuários");
+        itemProjeto = new JMenuItem("Projetos");
+        itemEquipe = new JMenuItem("Equipes");
+        itemTarefa = new JMenuItem("Tarefas");
+        
+        menuCadastros.add(itemUsuario);
+        menuCadastros.add(itemProjeto);
+        menuCadastros.add(itemEquipe);
+        menuCadastros.add(itemTarefa);
+        
+        // --- Menu Gerenciamento ---
+        JMenu menuGerenciamento = new JMenu("Gerenciamento");
+        menuBar.add(menuGerenciamento);
+        
+        itemAlocacao = new JMenuItem("Alocação de Equipes");
+        menuGerenciamento.add(itemAlocacao);
+
+        // --- Menu Relatórios ---
+        JMenu menuRelatorios = new JMenu("Relatórios");
+        menuBar.add(menuRelatorios);
+        
+        relatorioAtraso = new JMenuItem("Projetos em Risco");
+        relatorioStatus = new JMenuItem("Resumo de Status dos Projetos");
+        relatorioDesempenho = new JMenuItem("Desempenho dos Colaboradores");
+        
+        menuRelatorios.add(relatorioAtraso);
+        menuRelatorios.add(relatorioStatus);
+        menuRelatorios.add(relatorioDesempenho);
+
+        // --- Adicionando Ações aos Itens de Menu ---
+        itemUsuario.addActionListener(e -> new TelaListaUsuarios(usuarioLogado));
+        itemProjeto.addActionListener(e -> new TelaListaProjetos(usuarioLogado));
+        itemTarefa.addActionListener(e -> new TelaListaTarefas()); // Adapte se precisar
+        itemEquipe.addActionListener(e -> new TelaCadastroEquipe());
+        
+        itemAlocacao.addActionListener(e -> new TelaAlocacaoEquipes());
+        
+        relatorioAtraso.addActionListener(e -> new TelaRelatorioAtrasos());
+        relatorioStatus.addActionListener(e -> new TelaRelatorioStatus());
+        relatorioDesempenho.addActionListener(e -> new TelaRelatorioDesempenho());
+
+        // --- Controle de Acesso Final ---
+        configurarAcessos();
+
+        // --- Painel de boas-vindas ---
+        JLabel labelBoasVindas = new JLabel("Selecione uma opção no menu para começar.", SwingConstants.CENTER);
+        labelBoasVindas.setFont(new Font("Arial", Font.PLAIN, 24));
+        add(labelBoasVindas, BorderLayout.CENTER);
+
+        setVisible(true);
+    }
+    
+    // MÉTODO 'configurarAcessos' CORRIGIDO
+    private void configurarAcessos() {
+        String perfil = usuarioLogado.getPerfil();
+        
+        switch (perfil) {
+            case "administrador":
+                // Admin pode tudo, não desabilitamos nada.
+                break;
+                
+            case "gerente":
+                // Gerente pode tudo, EXCETO gerir utilizadores.
+                itemUsuario.setEnabled(false);
+                break;
+                
+            case "colaborador":
+                // Colaborador só pode ver relatórios.
+                // Desabilitamos todos os itens de menu de cadastro e gerenciamento.
+                itemUsuario.setEnabled(false);
+                itemProjeto.setEnabled(false);
+                itemEquipe.setEnabled(false);
+                itemTarefa.setEnabled(false);
+                itemAlocacao.setEnabled(false);
+                break;
+        }
+    }
+}

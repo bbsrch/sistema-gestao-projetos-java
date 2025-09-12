@@ -1,0 +1,97 @@
+package conexaodb;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import model.Tarefa;
+
+import java.awt.*;
+import java.util.List;
+
+public class TelaListaTarefas extends JFrame {
+
+    private DefaultTableModel modeloTabela;
+    private JTable tabela;
+    private JButton botaoNova, botaoEditar, botaoExcluir;
+    private TarefaDAO tarefaDAO;
+
+    public TelaListaTarefas() {
+        setTitle("Gerenciamento de Tarefas");
+        setSize(1000, 700);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);;
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        tarefaDAO = new TarefaDAO();
+
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("ID");
+        modeloTabela.addColumn("Título");
+        modeloTabela.addColumn("Projeto");
+        modeloTabela.addColumn("Responsável");
+        modeloTabela.addColumn("Status");
+        modeloTabela.addColumn("Fim Previsto");
+
+        tabela = new JTable(modeloTabela);
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        botaoNova = new JButton("Nova Tarefa");
+        botaoEditar = new JButton("Editar");
+        botaoExcluir = new JButton("Excluir");
+        painelBotoes.add(botaoNova);
+        painelBotoes.add(botaoEditar);
+        painelBotoes.add(botaoExcluir);
+        add(painelBotoes, BorderLayout.SOUTH);
+
+        botaoNova.addActionListener(e -> new TelaCadastroTarefa().setVisible(true));
+        
+        botaoExcluir.addActionListener(e -> {
+            int linha = tabela.getSelectedRow();
+            if (linha >= 0) {
+                int idTarefa = (int) tabela.getValueAt(linha, 0);
+                int confirm = JOptionPane.showConfirmDialog(this, "Deseja mesmo excluir a tarefa?", "Confirmar", JOptionPane.YES_NO_OPTION);
+                if (confirm == JOptionPane.YES_OPTION) {
+                    tarefaDAO.deletar(idTarefa);
+                    carregarDados();
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Selecione uma tarefa para excluir.");
+            }
+        });
+        
+        botaoEditar.addActionListener(e -> {
+            int linha = tabela.getSelectedRow();
+            if (linha >= 0) {
+                int idTarefa = (int) tabela.getValueAt(linha, 0);
+                List<Tarefa> tarefas = tarefaDAO.listarTodos();
+                for (Tarefa t : tarefas) {
+                    if (t.getId() == idTarefa) {
+                        new TelaCadastroTarefa(t).setVisible(true);
+                        break;
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Selecione uma tarefa para editar.");
+            }
+        });
+
+        carregarDados();
+        setVisible(true);
+    }
+
+    private void carregarDados() {
+        modeloTabela.setRowCount(0);
+        List<Tarefa> tarefas = tarefaDAO.listarTodos();
+        for (Tarefa t : tarefas) {
+            modeloTabela.addRow(new Object[]{
+                t.getId(),
+                t.getTitulo(),
+                t.getProjeto().getNome(), // Usando os objetos aninhados!
+                t.getResponsavel().getNomeCompleto(), // Usando os objetos aninhados!
+                t.getStatus(),
+                t.getDataFimPrevista()
+            });
+        }
+    }
+}

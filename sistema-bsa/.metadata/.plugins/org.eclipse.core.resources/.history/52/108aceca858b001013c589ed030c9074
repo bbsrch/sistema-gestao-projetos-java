@@ -1,0 +1,56 @@
+package conexaodb;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class UsuarioDAO {
+
+    // Este método vai receber um objeto Usuario já preenchido
+    // e vai se encarregar de salvá-lo no banco de dados.
+    public void cadastrar(Usuario novoUsuario) {
+        
+        // A lógica de conexão e SQL que estava no Principal.java vem para cá.
+        String sql = "INSERT INTO USUARIOS (nome_completo, cpf, email, cargo, login, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        Connection conexao = null;
+        PreparedStatement stmt = null;
+
+        try {
+            // Pega a conexão com o banco
+            conexao = new Conexao().getConexao();
+            
+            // Prepara o SQL
+            stmt = conexao.prepareStatement(sql);
+            
+            // Pega os dados do objeto "novoUsuario" para preencher o SQL
+            stmt.setString(1, novoUsuario.getNomeCompleto());
+            stmt.setString(2, novoUsuario.getCpf());
+            stmt.setString(3, novoUsuario.getEmail());
+            stmt.setString(4, novoUsuario.getCargo());
+            stmt.setString(5, novoUsuario.getLogin());
+            stmt.setString(6, novoUsuario.getSenha());
+            stmt.setString(7, novoUsuario.getPerfil());
+            
+            // Executa o SQL
+            stmt.execute();
+            System.out.println("Usuário cadastrado com sucesso pelo DAO!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao cadastrar usuário no DAO: " + e.getMessage());
+        } finally {
+            // Bloco "finally" é sempre executado, dando certo ou errado no "try".
+            // É o lugar ideal para fechar as conexões.
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conexao != null) {
+                    conexao.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

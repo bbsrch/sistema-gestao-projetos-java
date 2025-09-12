@@ -1,0 +1,120 @@
+package conexaodb;
+
+import javax.swing.*;
+import com.toedter.calendar.JDateChooser; // Importando o componente de calendário
+import java.util.List;
+
+public class TelaCadastroProjeto extends JFrame {
+
+    // --- Componentes da Tela ---
+    private JLabel labelNome, labelDescricao, labelDataInicio, labelDataTermino, labelStatus, labelGerente;
+    private JTextField campoNome;
+    private JTextArea campoDescricao; // Melhor para textos longos
+    private JDateChooser campoDataInicio, campoDataTermino; // Nossos calendários
+    private JComboBox<String> comboStatus; // Lista para os status
+    private JComboBox<Usuario> comboGerentes; // Lista para os gerentes (do tipo Usuario!)
+    private JButton botaoSalvar;
+
+    public TelaCadastroProjeto() {
+        setTitle("Cadastro de Novo Projeto");
+        setSize(500, 450);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        // --- Inicializando e Posicionando os Componentes ---
+        
+        labelNome = new JLabel("Nome do Projeto:");
+        labelNome.setBounds(20, 20, 120, 25);
+        add(labelNome);
+        campoNome = new JTextField();
+        campoNome.setBounds(150, 20, 300, 25);
+        add(campoNome);
+
+        labelDescricao = new JLabel("Descrição:");
+        labelDescricao.setBounds(20, 60, 120, 25);
+        add(labelDescricao);
+        campoDescricao = new JTextArea();
+        JScrollPane scrollDescricao = new JScrollPane(campoDescricao); // Painel de rolagem para a descrição
+        scrollDescricao.setBounds(150, 60, 300, 80);
+        add(scrollDescricao);
+
+        labelDataInicio = new JLabel("Data de Início:");
+        labelDataInicio.setBounds(20, 155, 120, 25);
+        add(labelDataInicio);
+        campoDataInicio = new JDateChooser();
+        campoDataInicio.setBounds(150, 155, 150, 25);
+        add(campoDataInicio);
+
+        labelDataTermino = new JLabel("Término Previsto:");
+        labelDataTermino.setBounds(20, 190, 120, 25);
+        add(labelDataTermino);
+        campoDataTermino = new JDateChooser();
+        campoDataTermino.setBounds(150, 190, 150, 25);
+        add(campoDataTermino);
+
+        labelStatus = new JLabel("Status:");
+        labelStatus.setBounds(20, 225, 120, 25);
+        add(labelStatus);
+        String[] statusOptions = {"planejado", "em andamento", "concluído", "cancelado"};
+        comboStatus = new JComboBox<>(statusOptions);
+        comboStatus.setBounds(150, 225, 150, 25);
+        add(comboStatus);
+
+        labelGerente = new JLabel("Gerente:");
+        labelGerente.setBounds(20, 260, 120, 25);
+        add(labelGerente);
+        comboGerentes = new JComboBox<>(); // Criamos a caixa vazia por enquanto
+        comboGerentes.setBounds(150, 260, 300, 25);
+        add(comboGerentes);
+
+        botaoSalvar = new JButton("Salvar Projeto");
+        botaoSalvar.setBounds(180, 330, 150, 30);
+        add(botaoSalvar);
+        
+        // --- Carregando os dados dinâmicos ---
+        carregarGerentes();
+
+        // --- Lógica do Botão Salvar ---
+        botaoSalvar.addActionListener(e -> {
+            // 1. Coletar todos os dados da tela
+            Projeto novoProjeto = new Projeto();
+            novoProjeto.setNome(campoNome.getText());
+            novoProjeto.setDescricao(campoDescricao.getText());
+            
+            // 2. Converter as datas do JCalendar para java.sql.Date
+            java.util.Date dataUtilInicio = campoDataInicio.getDate();
+            java.sql.Date dataSqlInicio = new java.sql.Date(dataUtilInicio.getTime());
+            novoProjeto.setDataInicio(dataSqlInicio);
+            
+            java.util.Date dataUtilTermino = campoDataTermino.getDate();
+            java.sql.Date dataSqlTermino = new java.sql.Date(dataUtilTermino.getTime());
+            novoProjeto.setDataTerminoPrevista(dataSqlTermino);
+
+            // 3. Pegar os valores dos ComboBoxes
+            novoProjeto.setStatus((String) comboStatus.getSelectedItem());
+            novoProjeto.setGerente((Usuario) comboGerentes.getSelectedItem()); // Pega o objeto Usuario inteiro!
+
+            // 4. Salvar no banco de dados
+            ProjetoDAO projetoDAO = new ProjetoDAO();
+            projetoDAO.cadastrar(novoProjeto);
+            
+            JOptionPane.showMessageDialog(this, "Projeto cadastrado com sucesso!");
+            this.dispose();
+        });
+
+        setVisible(true);
+    }
+
+    /**
+     * Método que busca os usuários no banco e os adiciona ao ComboBox de gerentes.
+     */
+    private void carregarGerentes() {
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        List<Usuario> gerentes = usuarioDAO.listarTodos(); // Reutilizamos o método que já tínhamos!
+        
+        for (Usuario gerente : gerentes) {
+            comboGerentes.addItem(gerente); // Adicionamos o objeto Usuario inteiro
+        }
+    }
+}

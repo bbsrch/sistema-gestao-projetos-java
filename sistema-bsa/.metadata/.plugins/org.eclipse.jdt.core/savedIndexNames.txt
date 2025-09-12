@@ -1,0 +1,7 @@
+INDEX VERSION 1.134+C:\Users\André\Desktop\GitHub\sistema-bsa\.metadata\.plugins\org.eclipse.jdt.core
+1081535062.index
+136717518.index
+498449610.index
+3331256490.index
+1865797976.index
+2962772952.index

@@ -1,0 +1,68 @@
+package conexaodb;
+
+//Esta classe é apenas um "molde" para representar um usuário.
+//Não tem lógica, só campos (variáveis) para guardar os dados.
+public class Usuario {
+
+ // Os campos são "private" para proteger os dados.
+ // Ninguém de fora pode alterá-los diretamente.
+ private String nomeCompleto;
+ private String cpf;
+ private String email;
+ private String login;
+ private String senha;
+ private String perfil;
+
+ // A partir daqui, temos os métodos "Getters" e "Setters".
+ // Getters: Servem para "pegar" o valor de um campo.
+ // Setters: Servem para "definir" um valor para um campo.
+ // É a forma correta e segura de acessar os dados.
+
+ public String getNomeCompleto() {
+     return nomeCompleto;
+ }
+
+ public void setNomeCompleto(String nomeCompleto) {
+     this.nomeCompleto = nomeCompleto;
+ }
+
+ public String getCpf() {
+     return cpf;
+ }
+
+ public void setCpf(String cpf) {
+     this.cpf = cpf;
+ }
+
+ public String getEmail() {
+     return email;
+ }
+
+ public void setEmail(String email) {
+     this.email = email;
+ }
+
+ public String getLogin() {
+     return login;
+ }
+
+ public void setLogin(String login) {
+     this.login = login;
+ }
+
+ public String getSenha() {
+     return senha;
+ }
+
+ public void setSenha(String senha) {
+     this.senha = senha;
+ }
+
+ public String getPerfil() {
+     return perfil;
+ }
+
+ public void setPerfil(String perfil) {
+     this.perfil = perfil;
+ }
+}

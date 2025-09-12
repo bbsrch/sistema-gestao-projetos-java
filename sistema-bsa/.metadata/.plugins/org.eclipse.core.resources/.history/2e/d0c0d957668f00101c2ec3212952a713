@@ -1,0 +1,41 @@
+// Dentro da classe TarefaDAO.java
+
+/**
+ * Gera um relatório de desempenho para cada colaborador.
+ * Conta o total de tarefas atribuídas e o total de tarefas concluídas.
+ * @return Uma lista com os dados de desempenho de cada colaborador.
+ */
+public List<DesempenhoColaborador> gerarRelatorioDesempenho() {
+    List<DesempenhoColaborador> relatorio = new ArrayList<>();
+    // Este SQL é o mais avançado. Ele junta tarefas e usuários, agrupa por usuário,
+    // e faz duas contagens diferentes para cada um.
+    String sql = "SELECT " +
+                 "    u.nome_completo, " +
+                 "    COUNT(t.id_tarefa) as total_atribuido, " +
+                 "    SUM(CASE WHEN t.status = 'concluída' THEN 1 ELSE 0 END) as total_concluido " +
+                 "FROM " +
+                 "    usuarios u " +
+                 "LEFT JOIN tarefas t ON u.id_usuario = t.id_responsavel " +
+                 "GROUP BY " +
+                 "    u.id_usuario, u.nome_completo " +
+                 "ORDER BY " +
+                 "    u.nome_completo";
+
+    try (Connection conexao = new Conexao().getConexao();
+         PreparedStatement stmt = conexao.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+
+        while (rs.next()) {
+            DesempenhoColaborador desempenho = new DesempenhoColaborador();
+            desempenho.setNomeColaborador(rs.getString("nome_completo"));
+            desempenho.setTotalTarefasAtribuidas(rs.getInt("total_atribuido"));
+            desempenho.setTarefasConcluidas(rs.getInt("total_concluido"));
+            relatorio.add(desempenho);
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Erro ao gerar relatório de desempenho: " + e.getMessage());
+        e.printStackTrace();
+    }
+    return relatorio;
+}

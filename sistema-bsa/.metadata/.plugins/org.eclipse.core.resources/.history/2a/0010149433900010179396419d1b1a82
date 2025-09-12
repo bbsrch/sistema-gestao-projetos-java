@@ -1,0 +1,146 @@
+package view;
+
+import javax.swing.*;
+import com.toedter.calendar.JDateChooser; 
+
+import dao.ProjetoDAO;
+import dao.UsuarioDAO;
+import model.Projeto;
+import model.Usuario;
+
+import java.util.List;
+
+public class TelaCadastroProjeto extends JFrame {
+
+    // --- Componentes da Tela ---
+	private Projeto projetoParaEditar;
+    private JLabel labelNome, labelDescricao, labelDataInicio, labelDataTermino, labelStatus, labelGerente;
+    private JTextField campoNome;
+    private JTextArea campoDescricao;
+    private JDateChooser campoDataInicio, campoDataTermino;
+    private JComboBox<String> comboStatus; 
+    private JComboBox<Usuario> comboGerentes; 
+    private JButton botaoSalvar;
+
+    public TelaCadastroProjeto() {
+        setTitle("Cadastro de Novo Projeto");
+        setSize(500, 450);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        
+        labelNome = new JLabel("Nome do Projeto:");
+        labelNome.setBounds(20, 20, 120, 25);
+        add(labelNome);
+        campoNome = new JTextField();
+        campoNome.setBounds(150, 20, 300, 25);
+        add(campoNome);
+
+        labelDescricao = new JLabel("Descrição:");
+        labelDescricao.setBounds(20, 60, 120, 25);
+        add(labelDescricao);
+        campoDescricao = new JTextArea();
+        JScrollPane scrollDescricao = new JScrollPane(campoDescricao); 
+        scrollDescricao.setBounds(150, 60, 300, 80);
+        add(scrollDescricao);
+
+        labelDataInicio = new JLabel("Data de Início:");
+        labelDataInicio.setBounds(20, 155, 120, 25);
+        add(labelDataInicio);
+        campoDataInicio = new JDateChooser();
+        campoDataInicio.setBounds(150, 155, 150, 25);
+        add(campoDataInicio);
+
+        labelDataTermino = new JLabel("Término Previsto:");
+        labelDataTermino.setBounds(20, 190, 120, 25);
+        add(labelDataTermino);
+        campoDataTermino = new JDateChooser();
+        campoDataTermino.setBounds(150, 190, 150, 25);
+        add(campoDataTermino);
+
+        labelStatus = new JLabel("Status:");
+        labelStatus.setBounds(20, 225, 120, 25);
+        add(labelStatus);
+        String[] statusOptions = {"planejado", "em andamento", "concluído", "cancelado"};
+        comboStatus = new JComboBox<>(statusOptions);
+        comboStatus.setBounds(150, 225, 150, 25);
+        add(comboStatus);
+
+        labelGerente = new JLabel("Gerente:");
+        labelGerente.setBounds(20, 260, 120, 25);
+        add(labelGerente);
+        comboGerentes = new JComboBox<>(); 
+        comboGerentes.setBounds(150, 260, 300, 25);
+        add(comboGerentes);
+
+        botaoSalvar = new JButton("Salvar Projeto");
+        botaoSalvar.setBounds(180, 330, 150, 30);
+        add(botaoSalvar);
+        
+        carregarGerentes();
+
+        botaoSalvar.addActionListener(e -> {
+            String nome = campoNome.getText();
+            String descricao = campoDescricao.getText();
+            java.sql.Date dataInicio = new java.sql.Date(campoDataInicio.getDate().getTime());
+            java.sql.Date dataTermino = new java.sql.Date(campoDataTermino.getDate().getTime());
+            String status = (String) comboStatus.getSelectedItem();
+            Usuario gerente = (Usuario) comboGerentes.getSelectedItem();
+
+            ProjetoDAO projetoDAO = new ProjetoDAO();
+
+            if (projetoParaEditar == null) {
+                // --- MODO CADASTRO ---
+                Projeto novoProjeto = new Projeto();
+                novoProjeto.setNome(nome);
+                novoProjeto.setDescricao(descricao);
+                novoProjeto.setDataInicio(dataInicio);
+                novoProjeto.setDataTerminoPrevista(dataTermino);
+                novoProjeto.setStatus(status);
+                novoProjeto.setGerente(gerente);
+
+                projetoDAO.cadastrar(novoProjeto);
+                JOptionPane.showMessageDialog(this, "Projeto cadastrado com sucesso!");
+            } else {
+                // --- MODO EDIÇÃO ---
+                projetoParaEditar.setNome(nome);
+                projetoParaEditar.setDescricao(descricao);
+                projetoParaEditar.setDataInicio(dataInicio);
+                projetoParaEditar.setDataTerminoPrevista(dataTermino);
+                projetoParaEditar.setStatus(status);
+                projetoParaEditar.setGerente(gerente);
+
+                projetoDAO.atualizar(projetoParaEditar);
+                JOptionPane.showMessageDialog(this, "Projeto atualizado com sucesso!");
+            }
+
+            this.dispose();
+        });
+
+        setVisible(true);
+    }
+    
+    public TelaCadastroProjeto(Projeto projeto) {
+        this(); 
+        setTitle("Editar Projeto");
+        this.projetoParaEditar = projeto;
+
+        campoNome.setText(projeto.getNome());
+        campoDescricao.setText(projeto.getDescricao());
+        campoDataInicio.setDate(projeto.getDataInicio());
+        campoDataTermino.setDate(projeto.getDataTerminoPrevista());
+        comboStatus.setSelectedItem(projeto.getStatus());
+
+        comboGerentes.setSelectedItem(projeto.getGerente());
+    }
+
+    private void carregarGerentes() {
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        List<Usuario> gerentes = usuarioDAO.listarTodos(); 
+        
+        for (Usuario gerente : gerentes) {
+            comboGerentes.addItem(gerente); 
+        }
+    }
+}

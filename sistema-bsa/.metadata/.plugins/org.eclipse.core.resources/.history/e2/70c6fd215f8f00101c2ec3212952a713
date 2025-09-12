@@ -1,0 +1,61 @@
+package conexaodb;
+
+import java.util.ArrayList;
+import java.util.List;
+
+// A "ficha de dados" para uma Equipe.
+public class Equipe {
+
+    private int id;
+    private String nome;
+    private String descricao;
+    
+    // A lista de membros. Um exemplo de composição.
+    private List<Usuario> membros;
+
+    // Construtor
+    public Equipe() {
+        // É uma boa prática inicializar a lista no construtor
+        // para evitar NullPointerException mais tarde.
+        this.membros = new ArrayList<>();
+    }
+    
+    // Getters e Setters
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public List<Usuario> getMembros() {
+        return membros;
+    }
+
+    public void setMembros(List<Usuario> membros) {
+        this.membros = membros;
+    }
+    
+    // Um método útil para adicionar um membro à equipe de cada vez
+    public void adicionarMembro(Usuario membro) {
+        this.membros.add(membro);
+    }
+}

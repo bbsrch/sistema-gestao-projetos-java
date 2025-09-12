@@ -1,0 +1,8 @@
+package conexaodb;
+
+public class Principal {
+    public static void main(String[] args) {
+        // Inicia o sistema pela tela de gerenciamento de projetos
+        new TelaListaProjetos();
+    }
+}

@@ -1,0 +1,201 @@
+package conexaodb;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import model.Projeto;
+import model.Usuario;
+
+public class ProjetoDAO {
+
+    /**
+     * Método para cadastrar um novo projeto no banco de dados.
+     */
+    public void cadastrar(Projeto projeto) {
+        String sql = "INSERT INTO PROJETOS (nome_projeto, descricao, data_inicio, data_termino_prevista, status, id_gerente) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, projeto.getNome());
+            stmt.setString(2, projeto.getDescricao());
+            stmt.setDate(3, projeto.getDataInicio()); // Usamos setDate para datas SQL
+            stmt.setDate(4, projeto.getDataTerminoPrevista());
+            stmt.setString(5, projeto.getStatus());
+            stmt.setInt(6, projeto.getGerente().getId()); // Pegamos apenas o ID do objeto Gerente
+
+            stmt.execute();
+            System.out.println("Projeto cadastrado com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao cadastrar projeto: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Método para listar todos os projetos, trazendo também os dados do gerente.
+     * A MÁGICA DO JOIN ACONTECE AQUI!
+     */
+    public List<Projeto> listarTodos() {
+        List<Projeto> projetos = new ArrayList<>();
+        // O SQL agora usa JOIN para "juntar" a tabela PROJETOS com a USUARIOS
+        String sql = "SELECT p.*, u.id_usuario as gerente_id, u.nome_completo as gerente_nome " +
+                     "FROM PROJETOS p " +
+                     "JOIN USUARIOS u ON p.id_gerente = u.id_usuario";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                // 1. Criar o objeto Gerente (Usuario) com os dados vindos da tabela USUARIOS
+                Usuario gerente = new Usuario();
+                gerente.setId(rs.getInt("gerente_id"));
+                gerente.setNomeCompleto(rs.getString("gerente_nome"));
+                
+                // 2. Criar o objeto Projeto com os dados vindos da tabela PROJETOS
+                Projeto projeto = new Projeto();
+                projeto.setId(rs.getInt("id_projeto"));
+                projeto.setNome(rs.getString("nome_projeto"));
+                projeto.setDescricao(rs.getString("descricao"));
+                projeto.setDataInicio(rs.getDate("data_inicio"));
+                projeto.setDataTerminoPrevista(rs.getDate("data_termino_prevista"));
+                projeto.setStatus(rs.getString("status"));
+                
+                // 3. "Anexar" o crachá completo do gerente ao projeto
+                projeto.setGerente(gerente);
+
+                projetos.add(projeto);
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar projetos: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return projetos;
+    }
+    
+    /**
+     * Método para atualizar um projeto existente.
+     */
+    public void atualizar(Projeto projeto) {
+        String sql = "UPDATE PROJETOS SET nome_projeto = ?, descricao = ?, data_inicio = ?, " + 
+                     "data_termino_prevista = ?, status = ?, id_gerente = ? WHERE id_projeto = ?";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, projeto.getNome());
+            stmt.setString(2, projeto.getDescricao());
+            stmt.setDate(3, projeto.getDataInicio());
+            stmt.setDate(4, projeto.getDataTerminoPrevista());
+            stmt.setString(5, projeto.getStatus());
+            stmt.setInt(6, projeto.getGerente().getId());
+            stmt.setInt(7, projeto.getId()); // ID do projeto para a cláusula WHERE
+
+            stmt.executeUpdate();
+            System.out.println("Projeto atualizado com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao atualizar projeto: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Método para deletar um projeto pelo seu ID.
+     */
+    public void deletar(int id) {
+        String sql = "DELETE FROM PROJETOS WHERE id_projeto = ?";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+            System.out.println("Projeto deletado com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao deletar projeto: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+ // Dentro da classe ProjetoDAO.java
+
+    /**
+     * Lista todos os projetos cuja data de término prevista já passou
+     * e que não estão marcados como 'concluído' ou 'cancelado'.
+     * @return Uma lista de projetos em risco de atraso.
+     */
+    public List<Projeto> listarProjetosEmRisco() {
+        List<Projeto> projetos = new ArrayList<>();
+        // A mágica está na cláusula WHERE:
+        // CURDATE() pega a data atual do servidor de banco de dados.
+        String sql = "SELECT p.*, u.id_usuario as gerente_id, u.nome_completo as gerente_nome " +
+                     "FROM projetos p " +
+                     "JOIN usuarios u ON p.id_gerente = u.id_usuario " +
+                     "WHERE p.data_termino_prevista < CURDATE() " +
+                     "AND p.status NOT IN ('concluído', 'cancelado')";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                // Reconstruímos os objetos Projeto e Gerente, como já fizemos antes
+                Usuario gerente = new Usuario();
+                gerente.setId(rs.getInt("gerente_id"));
+                gerente.setNomeCompleto(rs.getString("gerente_nome"));
+                
+                Projeto projeto = new Projeto();
+                projeto.setId(rs.getInt("id_projeto"));
+                projeto.setNome(rs.getString("nome_projeto"));
+                projeto.setDataTerminoPrevista(rs.getDate("data_termino_prevista"));
+                projeto.setStatus(rs.getString("status"));
+                projeto.setGerente(gerente);
+
+                projetos.add(projeto);
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar projetos em risco: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return projetos;
+    }
+    
+    // Dentro da classe ProjetoDAO.java
+
+    /**
+     * Gera um resumo da quantidade de projetos para cada status.
+     * Utiliza GROUP BY e COUNT para agregar os dados.
+     * @return Uma lista de objetos ResumoProjetosStatus.
+     */
+    public List<ResumoProjetosStatus> gerarResumoStatus() {
+        List<ResumoProjetosStatus> resumo = new ArrayList<>();
+        // O SQL agrupa todas as linhas pelo campo 'status' e, para cada grupo,
+        // conta (*) quantas linhas existem.
+        String sql = "SELECT status, COUNT(*) as quantidade FROM projetos GROUP BY status";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                ResumoProjetosStatus item = new ResumoProjetosStatus();
+                item.setStatus(rs.getString("status"));
+                item.setQuantidade(rs.getInt("quantidade"));
+                resumo.add(item);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao gerar resumo de status: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return resumo;
+    }
+}

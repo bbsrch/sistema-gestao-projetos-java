@@ -1,0 +1,224 @@
+package conexaodb;
+
+import org.mindrot.jbcrypt.BCrypt; // Importa a biblioteca de hashing
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.sql.ResultSet; // Importante para receber os resultados do banco
+
+public class UsuarioDAO {
+
+    // Este método vai receber um objeto Usuario já preenchido
+    // e vai se encarregar de salvá-lo no banco de dados.
+    public void cadastrar(Usuario novoUsuario) {
+        
+        // A lógica de conexão e SQL que estava no Principal.java vem para cá.
+        String sql = "INSERT INTO USUARIOS (nome_completo, cpf, email, cargo, login, senha, perfil) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        Connection conexao = null;
+        PreparedStatement stmt = null;
+
+        try {
+            // Pega a conexão com o banco
+            conexao = new Conexao().getConexao();
+            
+            // Prepara o SQL
+            stmt = conexao.prepareStatement(sql);
+            
+            // Pega os dados do objeto "novoUsuario" para preencher o SQL
+            stmt.setString(1, novoUsuario.getNomeCompleto());
+            stmt.setString(2, novoUsuario.getCpf());
+            stmt.setString(3, novoUsuario.getEmail());
+            stmt.setString(4, novoUsuario.getCargo());
+            stmt.setString(5, novoUsuario.getLogin());
+            String senhaHasheada = BCrypt.hashpw(novoUsuario.getSenha(), BCrypt.gensalt());
+            stmt.setString(6, senhaHasheada);
+            stmt.setString(7, novoUsuario.getPerfil());
+            
+            // Executa o SQL
+            stmt.execute();
+            System.out.println("Usuário cadastrado com sucesso pelo DAO!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao cadastrar usuário no DAO: " + e.getMessage());
+        } finally {
+            // Bloco "finally" é sempre executado, dando certo ou errado no "try".
+            // É o lugar ideal para fechar as conexões.
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conexao != null) {
+                    conexao.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+ // Novo método para listar todos os usuários
+    public List<Usuario> listarTodos() {
+        
+        // 1. Preparar a "caixa" que guardará os usuários que virão do banco
+        List<Usuario> listaDeUsuarios = new ArrayList<>();
+        
+        String sql = "SELECT * FROM USUARIOS"; // Comando SQL para selecionar tudo da tabela
+        
+        Connection conexao = null;
+        PreparedStatement stmt = null;
+        // ResultSet é o objeto que guarda o resultado de um SELECT
+        ResultSet rs = null;
+
+        try {
+            conexao = new Conexao().getConexao();
+            stmt = conexao.prepareStatement(sql);
+            
+            // Usamos executeQuery() para comandos SELECT
+            rs = stmt.executeQuery();
+            
+            // O laço "while (rs.next())" significa:
+            // "Enquanto houver uma próxima linha no resultado que o banco me enviou..."
+            while (rs.next()) {
+                
+                // Crio um objeto Usuario "ficha" em branco para cada linha
+                Usuario usuario = new Usuario();
+                
+                // Preencho a "ficha" com os dados daquela linha do banco
+                usuario.setId(rs.getInt("id_usuario"));
+                usuario.setNomeCompleto(rs.getString("nome_completo"));
+                usuario.setCpf(rs.getString("cpf"));
+                usuario.setEmail(rs.getString("email"));
+                usuario.setCargo(rs.getString("cargo"));
+                usuario.setLogin(rs.getString("login"));
+                // Por segurança, geralmente não trazemos a senha para a tela.
+                usuario.setPerfil(rs.getString("perfil"));
+                
+                // Adiciono a "ficha" preenchida dentro da minha caixa (a lista)
+                listaDeUsuarios.add(usuario);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar usuários: " + e.getMessage());
+        } finally {
+            // Fechar todas as conexões
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conexao != null) conexao.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        // No final, retorno a "caixa" com todas as "fichas" dentro.
+        return listaDeUsuarios;
+    }
+    
+    public void deletarPorCpf(String cpf) {
+        String sql = "DELETE FROM USUARIOS WHERE cpf = ?"; // O WHERE é MUITO importante!
+        
+        Connection conexao = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conexao = new Conexao().getConexao();
+            stmt = conexao.prepareStatement(sql);
+            stmt.setString(1, cpf); // Informa qual CPF deve ser deletado
+            
+            stmt.execute();
+            System.out.println("Usuário deletado com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao deletar usuário: " + e.getMessage());
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+                if (conexao != null) conexao.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public void atualizar(Usuario usuario) {
+        // Usaremos o CPF como chave para encontrar o usuário a ser atualizado
+        String sql = "UPDATE USUARIOS SET nome_completo = ?, email = ?, cargo = ?, login = ?, senha = ?, perfil = ? WHERE cpf = ?";
+        
+        Connection conexao = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conexao = new Conexao().getConexao();
+            stmt = conexao.prepareStatement(sql);
+            
+            // Preenche os parâmetros do SET
+            stmt.setString(1, usuario.getNomeCompleto());
+            stmt.setString(2, usuario.getEmail());
+            stmt.setString(3, usuario.getCargo());
+            stmt.setString(4, usuario.getLogin());
+            stmt.setString(5, usuario.getSenha());
+            stmt.setString(6, usuario.getPerfil());
+            // Preenche o parâmetro do WHERE
+            stmt.setString(7, usuario.getCpf());
+            
+            // ---- ADICIONE/MODIFIQUE ESTAS LINHAS ----
+            System.out.println("\n--- 4. DADOS DENTRO DO DAO ---");
+            System.out.println("Executando UPDATE para o CPF: '" + usuario.getCpf() + "'");
+            int linhasAfetadas = stmt.executeUpdate(); // Troque stmt.executeUpdate() por isso
+            System.out.println("Linhas realmente afetadas no banco: " + linhasAfetadas);
+            // -----------------------------------------
+            
+            // A linha abaixo não é mais necessária se você adicionou o bloco acima
+            // stmt.executeUpdate(); 
+            
+            System.out.println("Usuário atualizado com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao atualizar usuário: " + e.getMessage());
+        } finally {
+        	try {
+                if (stmt != null) stmt.close();
+                if (conexao != null) conexao.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+ // Adicione este método novo em UsuarioDAO.java
+
+    public Usuario validarLogin(String login, String senhaDigitada) {
+        String sql = "SELECT * FROM usuarios WHERE login = ?";
+        Usuario usuario = null;
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+
+            stmt.setString(1, login);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Usuário encontrado, agora vamos verificar a senha.
+                    String hashDoBanco = rs.getString("senha");
+
+                    // A mágica do BCrypt: ele compara a senha digitada com o hash salvo.
+                    if (BCrypt.checkpw(senhaDigitada, hashDoBanco)) {
+                        // A senha está correta! Montamos o objeto Usuario.
+                        usuario = new Usuario();
+                        usuario.setId(rs.getInt("id_usuario"));
+                        usuario.setNomeCompleto(rs.getString("nome_completo"));
+                        usuario.setLogin(rs.getString("login"));
+                        usuario.setPerfil(rs.getString("perfil"));
+                        // Preencha outros campos se precisar deles depois do login
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        // Retorna o objeto Usuario se o login for bem-sucedido, ou null se falhar.
+        return usuario;
+    }
+}

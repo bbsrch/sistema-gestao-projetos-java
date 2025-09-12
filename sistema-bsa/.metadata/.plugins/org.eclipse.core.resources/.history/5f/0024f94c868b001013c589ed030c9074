@@ -1,0 +1,10 @@
+package conexaodb;
+
+public class Principal {
+
+    public static void main(String[] args) {
+        // Apenas cria e exibe a nossa tela de cadastro.
+        // Toda a lógica agora está dentro da tela.
+        new TelaCadastroUsuario();
+    }
+}

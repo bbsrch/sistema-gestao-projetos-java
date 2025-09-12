@@ -1,0 +1,29 @@
+package conexaoproj;
+
+//Importa as ferramentas de conexão do Java
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Conexao {
+
+ // Método que vai tentar se conectar ao banco e te devolver a conexão
+ public Connection getConexao() {
+     // Tente fazer isso...
+     try {
+         // "Java, por favor, conecte-se ao banco de dados que está neste endereço..."
+         Connection conexao = DriverManager.getConnection(
+             "jdbc:mysql://localhost:3306/gestao_projetos", // Endereço do banco
+             "seu_usuario_mysql", // Geralmente "root"
+             "sua_senha_mysql"   // A senha que você criou
+         );
+         return conexao; // Se deu certo, me devolva a conexão
+     
+     // ... mas se der algum erro de SQL...
+     } catch (SQLException e) {
+         // ... me diga qual foi o erro e não quebre o programa.
+         System.out.println("Erro ao conectar com o banco de dados: " + e.getMessage());
+         return null; // Retorna nulo porque a conexão falhou
+     }
+ }
+}

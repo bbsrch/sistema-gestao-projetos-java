@@ -1,0 +1,114 @@
+package conexaodb;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class TelaPrincipal extends JFrame {
+
+    private Usuario usuarioLogado;
+
+    public TelaPrincipal(Usuario usuario) {
+        this.usuarioLogado = usuario;
+
+        setTitle("Sistema de Gestão de Projetos - Bem-vindo, " + usuarioLogado.getNomeCompleto());
+        setSize(1024, 768);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        // --- Criando a Barra de Menus ---
+        JMenuBar menuBar = new JMenuBar();
+        setJMenuBar(menuBar);
+
+        // --- Menu Cadastros ---
+        JMenu menuCadastros = new JMenu("Cadastros");
+        menuBar.add(menuCadastros);
+
+        JMenuItem itemUsuario = new JMenuItem("Usuários");
+        JMenuItem itemProjeto = new JMenuItem("Projetos");
+        JMenuItem itemEquipe = new JMenuItem("Equipes");
+        JMenuItem itemTarefa = new JMenuItem("Tarefas");
+        
+        menuCadastros.add(itemUsuario);
+        menuCadastros.add(itemProjeto);
+        menuCadastros.add(itemEquipe);
+        menuCadastros.add(itemTarefa);
+        
+        // --- Menu Gerenciamento ---
+        JMenu menuGerenciamento = new JMenu("Gerenciamento");
+        menuBar.add(menuGerenciamento);
+        
+        JMenuItem itemAlocacao = new JMenuItem("Alocação de Equipes");
+        menuGerenciamento.add(itemAlocacao);
+
+        // --- Menu Relatórios ---
+        JMenu menuRelatorios = new JMenu("Relatórios");
+        menuBar.add(menuRelatorios);
+        
+        JMenuItem relatorioAtraso = new JMenuItem("Projetos em Risco");
+        JMenuItem relatorioStatus = new JMenuItem("Resumo de Status dos Projetos");
+        JMenuItem relatorioDesempenho = new JMenuItem("Desempenho dos Colaboradores");
+        
+        menuRelatorios.add(relatorioAtraso);
+        menuRelatorios.add(relatorioStatus);
+        menuRelatorios.add(relatorioDesempenho);
+
+        // --- Adicionando Ações aos Itens de Menu ---
+        itemUsuario.addActionListener(e -> new TelaListaUsuarios(usuarioLogado)); // Passa o usuário logado
+        itemProjeto.addActionListener(e -> new TelaListaProjetos(usuarioLogado));
+        itemTarefa.addActionListener(e -> new TelaListaTarefas()); // Adapte se precisar de controle de acesso aqui
+        itemEquipe.addActionListener(e -> new TelaCadastroEquipe()); // Abre direto a de cadastro
+        
+        itemAlocacao.addActionListener(e -> new TelaAlocacaoEquipes());
+        
+        relatorioAtraso.addActionListener(e -> new TelaRelatorioAtrasos());
+        relatorioStatus.addActionListener(e -> new TelaRelatorioStatus());
+        relatorioDesempenho.addActionListener(e -> new TelaRelatorioDesempenho());
+
+        // --- Controle de Acesso Final ---
+        configurarAcessos(menuCadastros, menuGerenciamento);
+
+        // --- Um painel de boas-vindas simples ---
+        JLabel labelBoasVindas = new JLabel("Selecione uma opção no menu para começar.", SwingConstants.CENTER);
+        labelBoasVindas.setFont(new Font("Arial", Font.PLAIN, 24));
+        add(labelBoasVindas, BorderLayout.CENTER);
+
+        setVisible(true);
+    }
+    
+    private void configurarAcessos(JMenu menuCadastros, JMenu menuGerenciamento) {
+        String perfil = usuarioLogado.getPerfil();
+        
+        // Apenas administradores podem gerenciar usuários e equipes
+        if (!perfil.equals("administrador")) {
+            // Encontra o item "Usuários" e o desabilita
+            for (Component item : menuCadastros.getMenuComponents()) {
+                if (item instanceof JMenuItem && ((JMenuItem) item).getText().equals("Usuários")) {
+                    item.setEnabled(false);
+                }
+                if (item instanceof JMenuItem && ((JMenuItem) item).getText().equals("Equipes")) {
+                    item.setEnabled(false);
+                }
+            }
+             // Desabilita o menu inteiro de Alocação para não-admins
+            menuGerenciamento.setEnabled(false);
+        }
+        
+        // Colaboradores não podem criar projetos nem tarefas
+        if (perfil.equals("colaborador")) {
+             for (Component item : menuCadastros.getMenuComponents()) {
+                if (item instanceof JMenuItem && ((JMenuItem) item).getText().equals("Projetos")) {
+                    item.setEnabled(false); // Ou abra uma tela de lista que não permite editar/criar
+                }
+                 if (item instanceof JMenuItem && ((JMenuItem) item).getText().equals("Tarefas")) {
+                    item.setEnabled(false);
+                }
+            }
+        }
+    }
+}
+
+// Pequeno ajuste necessário na TelaListaUsuarios para ela não fechar o programa todo
+// Abra TelaListaUsuarios.java e mude a linha:
+// setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+// para:
+// setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

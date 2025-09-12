@@ -1,0 +1,12 @@
+package conexaodb;
+
+public class Principal {
+
+    // Opcional: podemos guardar o usuário logado aqui para usar em outras partes do sistema
+    public static Usuario usuarioLogado;
+
+    public static void main(String[] args) {
+        // O programa agora SEMPRE começa pela tela de login.
+        new TelaLogin();
+    }
+}

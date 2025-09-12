@@ -1,0 +1,57 @@
+package conexaodb;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class TelaLogin extends JFrame {
+
+    private JTextField campoLogin;
+    private JPasswordField campoSenha; // JPasswordField esconde a senha
+    private JButton botaoEntrar;
+
+    public TelaLogin() {
+        setTitle("Login - Sistema de Gestão de Projetos");
+        setSize(400, 250);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(null);
+
+        add(new JLabel("Login:")).setBounds(50, 40, 80, 25);
+        campoLogin = new JTextField();
+        campoLogin.setBounds(140, 40, 180, 25);
+        add(campoLogin);
+
+        add(new JLabel("Senha:")).setBounds(50, 80, 80, 25);
+        campoSenha = new JPasswordField();
+        campoSenha.setBounds(140, 80, 180, 25);
+        add(campoSenha);
+
+        botaoEntrar = new JButton("Entrar");
+        botaoEntrar.setBounds(150, 140, 100, 30);
+        add(botaoEntrar);
+
+        botaoEntrar.addActionListener(e -> {
+            String login = campoLogin.getText();
+            String senha = new String(campoSenha.getPassword()); // Pega a senha do JPasswordField
+
+            UsuarioDAO dao = new UsuarioDAO();
+            Usuario usuarioLogado = dao.validarLogin(login, senha);
+
+            if (usuarioLogado != null) {
+                // Login bem-sucedido!
+                JOptionPane.showMessageDialog(this, "Bem-vindo, " + usuarioLogado.getNomeCompleto() + "!");
+                
+             // Agora, abrimos a tela principal e "entregamos" o crachá do utilizador logado.
+            new TelaListaProjetos(usuarioLogado);
+                
+                // Fecha a tela de login
+                this.dispose();
+            } else {
+                // Login falhou
+                JOptionPane.showMessageDialog(this, "Login ou senha inválidos.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        setVisible(true);
+    }
+}

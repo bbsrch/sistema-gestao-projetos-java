@@ -1,0 +1,47 @@
+package conexaodb;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import model.DesempenhoColaborador;
+
+import java.awt.*;
+import java.util.List;
+
+public class TelaRelatorioDesempenho extends JFrame {
+
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+
+    public TelaRelatorioDesempenho() {
+        setTitle("Relatório - Desempenho dos Colaboradores");
+        setSize(800, 500);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("Nome do Colaborador");
+        modeloTabela.addColumn("Total de Tarefas Atribuídas");
+        modeloTabela.addColumn("Tarefas Concluídas");
+
+        tabela = new JTable(modeloTabela);
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        carregarDados();
+        setVisible(true);
+    }
+
+    private void carregarDados() {
+        TarefaDAO tarefaDAO = new TarefaDAO();
+        List<DesempenhoColaborador> relatorio = tarefaDAO.gerarRelatorioDesempenho();
+
+        for (DesempenhoColaborador d : relatorio) {
+            modeloTabela.addRow(new Object[]{
+                d.getNomeColaborador(),
+                d.getTotalTarefasAtribuidas(),
+                d.getTarefasConcluidas()
+            });
+        }
+    }
+}

@@ -1,0 +1,148 @@
+package conexaodb;
+
+import javax.swing.*;
+
+import model.Projeto;
+
+import java.awt.event.ItemEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TelaAlocacaoEquipes extends JFrame {
+
+    // --- Componentes ---
+    private JComboBox<Projeto> comboProjetos;
+    private JList<Equipe> listaDisponiveis, listaAlocadas;
+    private DefaultListModel<Equipe> modeloDisponiveis, modeloAlocadas;
+    private JButton botaoAdicionar, botaoRemover, botaoSalvar;
+
+    // --- DAOs ---
+    private ProjetoDAO projetoDAO;
+    private EquipeDAO equipeDAO;
+    private AlocacaoDAO alocacaoDAO;
+
+    public TelaAlocacaoEquipes() {
+        setTitle("Alocação de Equipes aos Projetos");
+        setSize(700, 500);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);;
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        // Instancia os DAOs
+        projetoDAO = new ProjetoDAO();
+        equipeDAO = new EquipeDAO();
+        alocacaoDAO = new AlocacaoDAO();
+
+        // --- Seleção de Projeto ---
+        add(new JLabel("Selecione o Projeto:")).setBounds(20, 20, 150, 25);
+        comboProjetos = new JComboBox<>();
+        comboProjetos.setBounds(180, 20, 480, 25);
+        add(comboProjetos);
+
+        // --- Listas ---
+        modeloDisponiveis = new DefaultListModel<>();
+        listaDisponiveis = new JList<>(modeloDisponiveis);
+        add(new JLabel("Equipes Disponíveis:")).setBounds(50, 70, 150, 25);
+        add(new JScrollPane(listaDisponiveis)).setBounds(50, 100, 250, 280);
+
+        modeloAlocadas = new DefaultListModel<>();
+        listaAlocadas = new JList<>(modeloAlocadas);
+        add(new JLabel("Equipes Alocadas no Projeto:")).setBounds(380, 70, 200, 25);
+        add(new JScrollPane(listaAlocadas)).setBounds(380, 100, 250, 280);
+
+        // --- Botões ---
+        botaoAdicionar = new JButton(">");
+        botaoAdicionar.setBounds(315, 180, 50, 30);
+        add(botaoAdicionar);
+
+        botaoRemover = new JButton("<");
+        botaoRemover.setBounds(315, 230, 50, 30);
+        add(botaoRemover);
+
+        botaoSalvar = new JButton("Salvar Alocações");
+        botaoSalvar.setBounds(270, 400, 150, 30);
+        add(botaoSalvar);
+
+        // --- Carregar dados iniciais ---
+        carregarProjetos();
+
+        // --- Lógica dos Eventos ---
+        
+        // Evento: quando um item no ComboBox de projetos é selecionado
+        comboProjetos.addItemListener(e -> {
+            // Verifica se um item foi SELECIONADO (para evitar disparar duas vezes)
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                atualizarListasDeEquipes();
+            }
+        });
+
+        botaoAdicionar.addActionListener(e -> moverEquipes(listaDisponiveis, modeloDisponiveis, modeloAlocadas));
+        botaoRemover.addActionListener(e -> moverEquipes(listaAlocadas, modeloAlocadas, modeloDisponiveis));
+
+        botaoSalvar.addActionListener(e -> {
+            Projeto projetoSelecionado = (Projeto) comboProjetos.getSelectedItem();
+            if (projetoSelecionado == null) {
+                JOptionPane.showMessageDialog(this, "Selecione um projeto para salvar.");
+                return;
+            }
+
+            // Pega a lista final de equipes alocadas (da lista da direita)
+            List<Equipe> equipesParaSalvar = new ArrayList<>();
+            for (int i = 0; i < modeloAlocadas.getSize(); i++) {
+                equipesParaSalvar.add(modeloAlocadas.getElementAt(i));
+            }
+
+            // Manda o DAO fazer o trabalho pesado
+            alocacaoDAO.atualizarAlocacoes(projetoSelecionado.getId(), equipesParaSalvar);
+            JOptionPane.showMessageDialog(this, "Alocações salvas com sucesso!");
+        });
+        
+        // Carrega as equipes para o primeiro projeto da lista (se houver)
+        if (comboProjetos.getItemCount() > 0) {
+            comboProjetos.setSelectedIndex(0);
+            atualizarListasDeEquipes();
+        }
+
+        setVisible(true);
+    }
+    
+    private void carregarProjetos() {
+        List<Projeto> projetos = projetoDAO.listarTodos();
+        for (Projeto p : projetos) {
+            comboProjetos.addItem(p);
+        }
+    }
+
+    private void atualizarListasDeEquipes() {
+        Projeto projetoSelecionado = (Projeto) comboProjetos.getSelectedItem();
+        if (projetoSelecionado == null) return;
+
+        // Limpa as listas
+        modeloDisponiveis.clear();
+        modeloAlocadas.clear();
+
+        // Busca TODAS as equipes existentes
+        List<Equipe> todasAsEquipes = equipeDAO.listarTodos();
+        // Busca as equipes JÁ ALOCADAS neste projeto
+        List<Equipe> equipesJaAlocadas = alocacaoDAO.buscarEquipesPorProjeto(projetoSelecionado.getId());
+
+        // Popula as duas listas baseado na comparação
+        for (Equipe equipe : todasAsEquipes) {
+            if (equipesJaAlocadas.contains(equipe)) {
+                // Se a equipe já está alocada, vai para a lista da direita
+                modeloAlocadas.addElement(equipe);
+            } else {
+                // Senão, vai para a lista da esquerda
+                modeloDisponiveis.addElement(equipe);
+            }
+        }
+    }
+
+    private void moverEquipes(JList<Equipe> origem, DefaultListModel<Equipe> modeloOrigem, DefaultListModel<Equipe> modeloDestino) {
+        List<Equipe> selecionadas = origem.getSelectedValuesList();
+        for (Equipe e : selecionadas) {
+            modeloDestino.addElement(e);
+            modeloOrigem.removeElement(e);
+        }
+    }
+}

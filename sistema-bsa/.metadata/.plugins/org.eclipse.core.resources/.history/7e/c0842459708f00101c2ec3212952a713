@@ -1,0 +1,34 @@
+package conexaodb;
+
+// Classe modelo para carregar os dados do relatório de desempenho.
+public class DesempenhoColaborador {
+
+    private String nomeColaborador;
+    private int totalTarefasAtribuidas;
+    private int tarefasConcluidas;
+
+    // Getters e Setters
+    public String getNomeColaborador() {
+        return nomeColaborador;
+    }
+
+    public void setNomeColaborador(String nomeColaborador) {
+        this.nomeColaborador = nomeColaborador;
+    }
+
+    public int getTotalTarefasAtribuidas() {
+        return totalTarefasAtribuidas;
+    }
+
+    public void setTotalTarefasAtribuidas(int totalTarefasAtribuidas) {
+        this.totalTarefasAtribuidas = totalTarefasAtribuidas;
+    }
+
+    public int getTarefasConcluidas() {
+        return tarefasConcluidas;
+    }
+
+    public void setTarefasConcluidas(int tarefasConcluidas) {
+        this.tarefasConcluidas = tarefasConcluidas;
+    }
+}

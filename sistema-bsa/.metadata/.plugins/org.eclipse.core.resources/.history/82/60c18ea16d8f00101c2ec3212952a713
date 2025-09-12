@@ -1,0 +1,155 @@
+package conexaodb;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class TelaCadastroUsuario extends JFrame {
+
+    // Componentes da tela
+    private JLabel labelNome, labelCpf, labelEmail, labelCargo, labelLogin, labelSenha;
+    private JTextField campoNome, campoCpf, campoEmail, campoCargo, campoLogin, campoSenha;
+    private JButton botaoSalvar;
+
+    // Variável para controlar o modo (cadastro ou edição)
+    private Usuario usuarioParaEditar;
+
+    // Construtor Padrão (para criar um novo usuário)
+    public TelaCadastroUsuario() {
+        inicializarComponentes(); // Monta a tela
+        setTitle("Cadastro de Novo Usuário");
+        setVisible(true);
+    }
+
+    // Construtor de Edição (para editar um usuário existente)
+    public TelaCadastroUsuario(Usuario usuario) {
+        inicializarComponentes(); // Monta a tela
+        setTitle("Editar Usuário"); // Define o título para o modo de edição
+        
+        // ---- ADICIONE ESTE BLOCO DE CÓDIGO ----
+        System.out.println("\n--- 2. DADOS RECEBIDOS PELA TELA DE EDIÇÃO ---");
+        System.out.println("CPF recebido no construtor: '" + usuario.getCpf() + "'");
+        // -----------------------------------------
+
+        this.usuarioParaEditar = usuario; // Guarda o usuário que estamos editando
+
+        // Preenche os campos com os dados do usuário
+        campoNome.setText(usuario.getNomeCompleto());
+        campoCpf.setText(usuario.getCpf());
+        campoCpf.setEditable(false); // Impede a edição do CPF, que é nossa chave
+        campoEmail.setText(usuario.getEmail());
+        campoCargo.setText(usuario.getCargo());
+        campoLogin.setText(usuario.getLogin());
+        campoSenha.setText(usuario.getSenha());
+        setVisible(true);
+    }
+
+    // Método privado que monta a janela e todos os componentes.
+    // Agora é chamado pelos dois construtores.
+    private void inicializarComponentes() {
+        // --- Configurações básicas da janela ---
+        setSize(400, 320); // Aumentei um pouco a altura
+        // Use DISPOSE_ON_CLOSE para fechar apenas esta janela, não a aplicação inteira
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(null);
+        setLocationRelativeTo(null); // Centraliza a janela
+
+        // --- Criando e posicionando os componentes ---
+        labelNome = new JLabel("Nome:");
+        labelNome.setBounds(20, 20, 80, 25);
+        add(labelNome);
+        campoNome = new JTextField();
+        campoNome.setBounds(100, 20, 250, 25);
+        add(campoNome);
+
+        labelCpf = new JLabel("CPF:");
+        labelCpf.setBounds(20, 50, 80, 25);
+        add(labelCpf);
+        campoCpf = new JTextField();
+        campoCpf.setBounds(100, 50, 250, 25);
+        add(campoCpf);
+
+        labelEmail = new JLabel("E-mail:");
+        labelEmail.setBounds(20, 80, 80, 25);
+        add(labelEmail);
+        campoEmail = new JTextField();
+        campoEmail.setBounds(100, 80, 250, 25);
+        add(campoEmail);
+
+        labelCargo = new JLabel("Cargo:");
+        labelCargo.setBounds(20, 110, 80, 25);
+        add(labelCargo);
+        campoCargo = new JTextField();
+        campoCargo.setBounds(100, 110, 250, 25);
+        add(campoCargo);
+
+        labelLogin = new JLabel("Login:");
+        labelLogin.setBounds(20, 140, 80, 25);
+        add(labelLogin);
+        campoLogin = new JTextField();
+        campoLogin.setBounds(100, 140, 250, 25);
+        add(campoLogin);
+
+        labelSenha = new JLabel("Senha:");
+        labelSenha.setBounds(20, 170, 80, 25);
+        add(labelSenha);
+        campoSenha = new JTextField();
+        campoSenha.setBounds(100, 170, 250, 25);
+        add(campoSenha);
+
+        // Botão Salvar
+        botaoSalvar = new JButton("Salvar");
+        botaoSalvar.setBounds(150, 220, 100, 30);
+        add(botaoSalvar);
+
+        // --- Lógica do Botão ---
+        botaoSalvar.addActionListener(e -> {
+            // Cria um objeto Usuario e preenche com os dados da tela
+            Usuario usuario = new Usuario();
+            usuario.setNomeCompleto(campoNome.getText());
+            usuario.setCpf(campoCpf.getText());
+            usuario.setEmail(campoEmail.getText());
+            usuario.setCargo(campoCargo.getText());
+            usuario.setLogin(campoLogin.getText());
+            usuario.setSenha(campoSenha.getText());
+
+            // ---- ADICIONE ESTE BLOCO DE CÓDIGO ----
+            System.out.println("\n--- 3. DADOS SENDO ENVIADOS PARA O DAO ---");
+            System.out.println("O programa está em modo de edição? " + (usuarioParaEditar != null));
+            System.out.println("CPF que será usado no WHERE: '" + usuario.getCpf() + "'");
+            System.out.println("Novo nome: " + usuario.getNomeCompleto());
+            // -----------------------------------------
+            
+            UsuarioDAO dao = new UsuarioDAO();
+
+            // AQUI ESTÁ A LÓGICA PRINCIPAL - AGORA VAI FUNCIONAR
+            if (usuarioParaEditar == null) {
+                // Modo CADASTRO
+                usuario.setPerfil("colaborador");
+                dao.cadastrar(usuario);
+                JOptionPane.showMessageDialog(this, "Usuário cadastrado com sucesso!");
+            } else {
+            	// Modo EDIÇÃO (atualizar usuário existente)
+
+                // Pega o perfil que veio do banco de dados.
+                String perfilOriginal = usuarioParaEditar.getPerfil();
+
+                // ---- NOSSA REDE DE SEGURANÇA ----
+                // SE, por qualquer motivo, o perfil veio nulo do banco (como no caso da Maria)...
+                if (perfilOriginal == null) {
+                    // ...nós definimos um valor padrão para não dar erro.
+                    perfilOriginal = "colaborador";
+                    System.out.println("!!! AVISO: O perfil do usuário era NULO, foi definido um padrão.");
+                }
+                // --------------------------------
+
+                usuario.setPerfil(perfilOriginal); // Garante que o perfil nunca será nulo
+                dao.atualizar(usuario);
+                JOptionPane.showMessageDialog(this, "Usuário atualizado com sucesso!");
+            }
+
+            // Fecha a janela após salvar
+            this.dispose();
+        });
+    }
+}

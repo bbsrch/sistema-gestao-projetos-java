@@ -1,0 +1,107 @@
+package conexaodb;
+
+import javax.swing.*; // Importa os componentes do Swing (JFrame, JButton, etc)
+import java.awt.event.ActionEvent; // Importa a classe para "ouvir" eventos (cliques)
+import java.awt.event.ActionListener; // Importa a classe para "reagir" aos eventos
+
+// Nossa tela vai ser uma Janela (JFrame)
+public class TelaCadastroUsuario extends JFrame {
+
+    // Componentes que vamos usar na tela
+    private JLabel labelNome, labelCpf, labelEmail, labelLogin, labelSenha;
+    private JTextField campoNome, campoCpf, campoEmail, campoLogin, campoSenha;
+    private JButton botaoSalvar;
+
+    public TelaCadastroUsuario() {
+        // --- Configurações básicas da janela ---
+        setTitle("Cadastro de Novo Usuário"); // Título da janela
+        setSize(400, 300); // Largura e altura
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Faz o programa fechar ao clicar no "X"
+        setLayout(null); // Vamos posicionar os componentes manualmente
+
+        // --- Criando e posicionando os componentes ---
+        
+        // Rótulo e campo para o Nome
+        labelNome = new JLabel("Nome:");
+        labelNome.setBounds(20, 20, 80, 25); // x, y, largura, altura
+        add(labelNome);
+        
+        campoNome = new JTextField();
+        campoNome.setBounds(100, 20, 250, 25);
+        add(campoNome);
+
+        // Rótulo e campo para o CPF
+        labelCpf = new JLabel("CPF:");
+        labelCpf.setBounds(20, 50, 80, 25);
+        add(labelCpf);
+        
+        campoCpf = new JTextField();
+        campoCpf.setBounds(100, 50, 250, 25);
+        add(campoCpf);
+        
+        labelEmail = new JLabel("E-mail:");
+        labelEmail.setBounds(20, 80, 80, 25);
+        add(labelEmail);
+        
+        campoEmail = new JTextField();
+        campoEmail.setBounds(100, 80, 250, 25);
+        add(campoEmail);
+        
+        labelLogin = new JLabel("Login:");
+        labelLogin.setBounds(20, 110, 80, 25);
+        add(labelLogin);
+        
+        campoLogin = new JTextField();
+        campoLogin.setBounds(100, 110, 250, 25);
+        add(campoLogin);
+        
+        labelSenha = new JLabel("Senha:");
+        labelSenha.setBounds(20, 140, 80, 25);
+        add(labelSenha);
+        
+        campoSenha = new JTextField();
+        campoSenha.setBounds(100, 140, 250, 25);
+        add(campoSenha);
+        // ... (FAÇA O MESMO PARA EMAIL, LOGIN E SENHA, ajustando a posição 'y') ...
+        
+        // Botão Salvar
+        botaoSalvar = new JButton("Salvar");
+        botaoSalvar.setBounds(150, 220, 100, 30);
+        add(botaoSalvar);
+
+        // --- Lógica do Botão ---
+        // Aqui está a mágica da interação
+        botaoSalvar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Este código SÓ SERÁ EXECUTADO quando o botão for clicado
+                
+                // 1. Criar uma "ficha" em branco
+                Usuario novoUsuario = new Usuario();
+
+                // 2. Preencher a ficha com os dados dos campos da tela
+                novoUsuario.setNomeCompleto(campoNome.getText());
+                novoUsuario.setCpf(campoCpf.getText());
+                // ... (faça o mesmo para os outros campos) ...
+                novoUsuario.setPerfil("colaborador");
+
+                // 3. Contratar o especialista
+                UsuarioDAO usuarioDAO = new UsuarioDAO();
+
+                // 4. Mandar o especialista salvar a ficha
+                usuarioDAO.cadastrar(novoUsuario);
+
+                // 5. Dar um feedback visual para o usuário
+                JOptionPane.showMessageDialog(null, "Usuário cadastrado com sucesso!");
+                
+                // Opcional: Limpar os campos após o cadastro
+                campoNome.setText("");
+                campoCpf.setText("");
+                // ...
+            }
+        });
+
+        // Torna a janela visível
+        setVisible(true);
+    }
+}

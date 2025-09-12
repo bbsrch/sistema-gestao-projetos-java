@@ -1,0 +1,139 @@
+package conexaodb;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel; // O "cérebro" da nossa tabela
+import java.util.List;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+
+public class TelaListaUsuarios extends JFrame {
+
+	private JButton botaoExcluir;
+	private JButton botaoEditar;
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+
+    public TelaListaUsuarios() {
+    	setTitle("Lista de Usuários");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout()); // Mude o layout para BorderLayout
+
+        // 1. O Modelo da Tabela
+        // O DefaultTableModel é quem gerencia os dados: colunas, linhas, etc.
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("Nome Completo"); // Adiciona as colunas
+        modeloTabela.addColumn("CPF");
+        modeloTabela.addColumn("Email");
+        modeloTabela.addColumn("Cargo");
+        modeloTabela.addColumn("Login");
+
+        // 2. A Tabela (A parte visual)
+        // Criamos a JTable e dizemos que o cérebro dela é o modelo que acabamos de criar.
+        tabela = new JTable(modeloTabela);
+
+        // 3. Colocando a tabela em um painel com barra de rolagem
+        // É uma boa prática, pois se tivermos muitos usuários, a barra aparece.
+        JScrollPane painelRolagem = new JScrollPane(tabela);
+        
+     // --- Painel de Botões ---
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT)); // Alinha botões à direita
+        botaoExcluir = new JButton("Excluir");
+        painelBotoes.add(botaoExcluir);
+        botaoEditar = new JButton("Editar");
+        painelBotoes.add(botaoEditar);
+
+        // Adiciona os painéis à janela
+        add(painelRolagem, BorderLayout.CENTER); // Tabela no centro
+        add(painelBotoes, BorderLayout.SOUTH); // Botões na parte de baixo
+
+        botaoEditar.addActionListener(e -> {
+            int linhaSelecionada = tabela.getSelectedRow();
+
+            if (linhaSelecionada == -1) {
+                JOptionPane.showMessageDialog(this, "Por favor, selecione um usuário para editar.");
+            } else {
+                // Cria um objeto Usuario com os dados da linha selecionada
+                Usuario usuarioSelecionado = new Usuario();
+                usuarioSelecionado.setNomeCompleto((String) modeloTabela.getValueAt(linhaSelecionada, 0));
+                usuarioSelecionado.setCpf((String) modeloTabela.getValueAt(linhaSelecionada, 1));
+                usuarioSelecionado.setEmail((String) modeloTabela.getValueAt(linhaSelecionada, 2));
+                usuarioSelecionado.setCargo((String) modeloTabela.getValueAt(linhaSelecionada, 3));
+                usuarioSelecionado.setLogin((String) modeloTabela.getValueAt(linhaSelecionada, 4));
+
+            	// ---- ADICIONE ESTE BLOCO DE CÓDIGO ----
+                System.out.println("\n--- 1. DADOS CAPTURADOS DA TABELA ---");
+                System.out.println("CPF capturado: '" + usuarioSelecionado.getCpf() + "'");
+                System.out.println("Nome capturado: " + usuarioSelecionado.getNomeCompleto());
+                // -----------------------------------------
+                
+                // Abre a tela de cadastro em modo de edição
+                // E passamos o listener para recarregar a tabela quando a edição for concluída
+                TelaCadastroUsuario telaEdicao = new TelaCadastroUsuario(usuarioSelecionado);
+                telaEdicao.setVisible(true);
+
+                // Para atualizar a tabela automaticamente após a edição, 
+                // a lógica é um pouco mais avançada (envolve listeners entre janelas).
+                // Por enquanto, você precisará fechar e abrir a lista para ver a mudança.
+                // Vamos focar em fazer a edição funcionar primeiro.
+            }
+        });
+        
+        // --- Lógica do Botão Excluir ---
+        botaoExcluir.addActionListener(e -> { // "e ->" é uma forma mais curta de escrever um ActionListener
+
+            // 1. Pega a linha selecionada na tabela
+            int linhaSelecionada = tabela.getSelectedRow();
+
+            // 2. Verifica se alguma linha foi realmente selecionada
+            if (linhaSelecionada == -1) {
+                JOptionPane.showMessageDialog(this, "Por favor, selecione um usuário para excluir.");
+            } else {
+                // 3. Pega o valor do CPF da linha selecionada (Coluna 1)
+                // Lembre-se que as colunas começam em 0: 0=Nome, 1=CPF, ...
+                String cpfParaExcluir = (String) modeloTabela.getValueAt(linhaSelecionada, 1);
+
+                // 4. Pede confirmação ao usuário
+                int confirmacao = JOptionPane.showConfirmDialog(this, 
+                        "Tem certeza que deseja excluir o usuário de CPF " + cpfParaExcluir + "?",
+                        "Confirmar Exclusão", 
+                        JOptionPane.YES_NO_OPTION);
+
+                if (confirmacao == JOptionPane.YES_OPTION) {
+                    // 5. Manda o DAO excluir e atualiza a tabela
+                    UsuarioDAO dao = new UsuarioDAO();
+                    dao.deletarPorCpf(cpfParaExcluir);
+
+                    JOptionPane.showMessageDialog(this, "Usuário excluído com sucesso!");
+
+                    // Recarrega os dados para a tabela sumir com a linha
+                    carregarDados();
+                }
+            }
+        });
+
+        carregarDados();
+        setVisible(true);
+    }
+    
+    private void carregarDados() {
+        // Limpa qualquer dado antigo que a tabela possa ter
+        modeloTabela.setRowCount(0);
+
+        // Contrata o especialista para buscar os dados no banco
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        List<Usuario> usuarios = usuarioDAO.listarTodos();
+
+        // Para cada usuário na lista, adiciona uma nova linha na tabela
+        for (Usuario u : usuarios) {
+            modeloTabela.addRow(new Object[]{
+                u.getNomeCompleto(),
+                u.getCpf(),
+                u.getEmail(),
+                u.getCargo(),
+                u.getLogin()
+            });
+        }
+    }
+}

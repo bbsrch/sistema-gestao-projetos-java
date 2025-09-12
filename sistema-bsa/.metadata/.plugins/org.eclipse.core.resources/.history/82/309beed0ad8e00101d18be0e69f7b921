@@ -1,0 +1,136 @@
+package conexaodb;
+
+import javax.swing.*; // Importa os componentes do Swing (JFrame, JButton, etc)
+import java.awt.event.ActionEvent; // Importa a classe para "ouvir" eventos (cliques)
+import java.awt.event.ActionListener; // Importa a classe para "reagir" aos eventos
+
+// Nossa tela vai ser uma Janela (JFrame)
+public class TelaCadastroUsuario extends JFrame {
+
+    // Componentes que vamos usar na tela
+    private JLabel labelNome, labelCpf, labelEmail, labelCargo, labelLogin, labelSenha;
+    private JTextField campoNome, campoCpf, campoEmail, campoCargo, campoLogin, campoSenha;
+    private JButton botaoSalvar;
+    private Usuario usuarioParaEditar = null;
+    private String cpfOriginal = null;
+
+    // Construtor para modo de Edição
+    public TelaCadastroUsuario(Usuario usuario) {
+        this(); // Chama o construtor padrão para montar a tela
+
+        setTitle("Editar Usuário"); // Muda o título da janela
+        this.usuarioParaEditar = usuario;
+        this.cpfOriginal = usuario.getCpf();
+
+        // Preenche os campos com os dados do usuário
+        campoNome.setText(usuario.getNomeCompleto());
+        campoCpf.setText(usuario.getCpf());
+        campoCpf.setEditable(false); // Impede a edição do CPF
+        campoEmail.setText(usuario.getEmail());
+        campoCargo.setText(usuario.getCargo());
+        campoLogin.setText(usuario.getLogin());
+        campoSenha.setText(usuario.getSenha());
+    }
+    
+    public TelaCadastroUsuario() {
+        // --- Configurações básicas da janela ---
+        setTitle("Cadastro de Novo Usuário"); // Título da janela
+        setSize(400, 300); // Largura e altura
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Faz o programa fechar ao clicar no "X"
+        setLayout(null); // Vamos posicionar os componentes manualmente
+
+        // --- Criando e posicionando os componentes ---
+        
+        // Rótulo e campo para o Nome
+        labelNome = new JLabel("Nome:");
+        labelNome.setBounds(20, 20, 80, 25); // x, y, largura, altura
+        add(labelNome);
+        
+        campoNome = new JTextField();
+        campoNome.setBounds(100, 20, 250, 25);
+        add(campoNome);
+
+        // Rótulo e campo para o CPF
+        labelCpf = new JLabel("CPF:");
+        labelCpf.setBounds(20, 50, 80, 25);
+        add(labelCpf);
+        
+        campoCpf = new JTextField();
+        campoCpf.setBounds(100, 50, 250, 25);
+        add(campoCpf);
+        
+        labelEmail = new JLabel("E-mail:");
+        labelEmail.setBounds(20, 80, 80, 25);
+        add(labelEmail);
+        
+        campoEmail = new JTextField();
+        campoEmail.setBounds(100, 80, 250, 25);
+        add(campoEmail);
+        
+        labelCargo = new JLabel("Cargo:");
+        labelCargo.setBounds(20, 110, 80, 25);
+        add(labelCargo);
+        
+        campoCargo = new JTextField();
+        campoCargo.setBounds(100, 110, 250, 25);
+        add(campoCargo);
+        
+        labelLogin = new JLabel("Login:");
+        labelLogin.setBounds(20, 140, 80, 25);
+        add(labelLogin);
+        
+        campoLogin = new JTextField();
+        campoLogin.setBounds(100, 140, 250, 25);
+        add(campoLogin);
+        
+        labelSenha = new JLabel("Senha:");
+        labelSenha.setBounds(20, 170, 80, 25);
+        add(labelSenha);
+        
+        campoSenha = new JTextField();
+        campoSenha.setBounds(100, 170, 250, 25);
+        add(campoSenha);
+        // ... (FAÇA O MESMO PARA EMAIL, LOGIN E SENHA, ajustando a posição 'y') ...
+        
+        // Botão Salvar
+        botaoSalvar = new JButton("Salvar");
+        botaoSalvar.setBounds(150, 220, 100, 30);
+        add(botaoSalvar);
+
+        // --- Lógica do Botão ---
+        // Aqui está a mágica da interação
+            	botaoSalvar.addActionListener(e -> {
+            	    // Pega os dados dos campos e coloca em um objeto Usuario
+            	    Usuario usuario = new Usuario();
+            	    usuario.setNomeCompleto(campoNome.getText());
+            	    usuario.setCpf(campoCpf.getText());
+            	    usuario.setEmail(campoEmail.getText());
+            	    usuario.setCargo(campoCargo.getText());
+            	    usuario.setLogin(campoLogin.getText());
+            	    usuario.setSenha(campoSenha.getText());
+
+            	    UsuarioDAO dao = new UsuarioDAO();
+
+            	    // AQUI ESTÁ A LÓGICA PRINCIPAL
+            	    if (usuarioParaEditar == null) {
+            	        // Modo CADASTRO (usuário novo)
+            	        usuario.setPerfil("colaborador");
+            	        dao.cadastrar(usuario);
+            	        JOptionPane.showMessageDialog(this, "Usuário cadastrado com sucesso!");
+            	    } else {
+            	        // Modo EDIÇÃO (atualizar usuário existente)
+            	        usuario.setPerfil(usuarioParaEditar.getPerfil()); // Mantém o perfil original
+            	        dao.atualizar(usuario);
+            	        JOptionPane.showMessageDialog(this, "Usuário atualizado com sucesso!");
+            	    }
+
+            	    // Fecha a janela após salvar
+            	    this.dispose();
+            	});
+            }
+        });
+
+        // Torna a janela visível
+        setVisible(true);
+    }
+}

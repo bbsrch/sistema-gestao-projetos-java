@@ -1,0 +1,10 @@
+package conexaodb;
+
+public class Principal {
+    public static Usuario usuarioLogado;
+
+    public static void main(String[] args) {
+        // O programa agora SEMPRE começa pela tela de login.
+         new TelaLogin();
+    }
+}

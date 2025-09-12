@@ -1,0 +1,127 @@
+package view;
+
+import javax.swing.*;
+
+import dao.EquipeDAO;
+import dao.UsuarioDAO;
+import model.Equipe;
+import model.Usuario;
+
+import java.awt.*;
+import java.util.Collections;
+import java.util.List;
+
+public class TelaCadastroEquipe extends JFrame {
+
+    // --- Componentes ---
+    private JTextField campoNome;
+    private JTextArea campoDescricao;
+    
+    // As duas listas e seus "cérebros" (os Modelos)
+    private JList<Usuario> listaUsuariosDisponiveis;
+    private DefaultListModel<Usuario> modeloUsuariosDisponiveis;
+    private JList<Usuario> listaMembrosEquipe;
+    private DefaultListModel<Usuario> modeloMembrosEquipe;
+
+    private JButton botaoAdicionar, botaoRemover, botaoSalvar;
+
+    public TelaCadastroEquipe() {
+        setTitle("Cadastro de Nova Equipe");
+        setSize(650, 450);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        // --- Campos de Nome e Descrição ---
+        JLabel labelNome = new JLabel("Nome da Equipe:");
+        labelNome.setBounds(20, 20, 120, 25);
+        add(labelNome);
+        campoNome = new JTextField();
+        campoNome.setBounds(150, 20, 450, 25);
+        add(campoNome);
+
+        JLabel labelDescricao = new JLabel("Descrição:");
+        labelDescricao.setBounds(20, 60, 120, 25);
+        add(labelDescricao);
+        campoDescricao = new JTextArea();
+        add(new JScrollPane(campoDescricao)).setBounds(150, 60, 450, 60);
+
+        // --- Listas de Seleção de Membros ---
+        modeloUsuariosDisponiveis = new DefaultListModel<>();
+        listaUsuariosDisponiveis = new JList<>(modeloUsuariosDisponiveis);
+        add(new JLabel("Usuários Disponíveis:")).setBounds(40, 140, 150, 25);
+        add(new JScrollPane(listaUsuariosDisponiveis)).setBounds(40, 170, 200, 150);
+
+        modeloMembrosEquipe = new DefaultListModel<>();
+        listaMembrosEquipe = new JList<>(modeloMembrosEquipe);
+        add(new JLabel("Membros da Equipe:")).setBounds(390, 140, 150, 25);
+        add(new JScrollPane(listaMembrosEquipe)).setBounds(390, 170, 200, 150);
+
+        // --- Botões de Transferência ---
+        botaoAdicionar = new JButton(">");
+        botaoAdicionar.setBounds(280, 190, 50, 30);
+        add(botaoAdicionar);
+
+        botaoRemover = new JButton("<");
+        botaoRemover.setBounds(280, 240, 50, 30);
+        add(botaoRemover);
+
+        // --- Botão de Salvar ---
+        botaoSalvar = new JButton("Salvar Equipe");
+        botaoSalvar.setBounds(250, 350, 150, 30);
+        add(botaoSalvar);
+
+        // --- Carregar dados iniciais ---
+        carregarUsuarios();
+
+        // --- Lógica dos Botões ---
+        
+        // Ação para adicionar membro selecionado
+        botaoAdicionar.addActionListener(e -> {
+            List<Usuario> selecionados = listaUsuariosDisponiveis.getSelectedValuesList();
+            for (Usuario u : selecionados) {
+                modeloMembrosEquipe.addElement(u);
+                modeloUsuariosDisponiveis.removeElement(u);
+            }
+        });
+
+        // Ação para remover membro selecionado
+        botaoRemover.addActionListener(e -> {
+            List<Usuario> selecionados = listaMembrosEquipe.getSelectedValuesList();
+            for (Usuario u : selecionados) {
+                modeloUsuariosDisponiveis.addElement(u);
+                modeloMembrosEquipe.removeElement(u);
+            }
+        });
+        
+        // Ação para salvar a equipe
+        botaoSalvar.addActionListener(e -> {
+            // 1. Criar o objeto Equipe com os dados básicos
+            Equipe novaEquipe = new Equipe();
+            novaEquipe.setNome(campoNome.getText());
+            novaEquipe.setDescricao(campoDescricao.getText());
+
+            // 2. Adicionar os membros selecionados (que estão na lista da direita)
+            for (int i = 0; i < modeloMembrosEquipe.getSize(); i++) {
+                novaEquipe.adicionarMembro(modeloMembrosEquipe.getElementAt(i));
+            }
+            
+            // 3. Chamar o DAO para salvar tudo (na transação!)
+            EquipeDAO equipeDAO = new EquipeDAO();
+            equipeDAO.cadastrar(novaEquipe);
+
+            JOptionPane.showMessageDialog(this, "Equipe cadastrada com sucesso!");
+            this.dispose();
+        });
+
+        setVisible(true);
+    }
+
+    private void carregarUsuarios() {
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        List<Usuario> usuarios = usuarioDAO.listarTodos();
+        for (Usuario u : usuarios) {
+            modeloUsuariosDisponiveis.addElement(u);
+        }
+    }
+}

@@ -1,0 +1,129 @@
+package conexaodb;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement; // Importe esta classe!
+import java.util.ArrayList;
+import java.util.List;
+
+public class EquipeDAO {
+
+    /**
+     * Cadastra uma nova equipe e seus membros.
+     * Esta operação usa uma TRANSAÇÃO para garantir a integridade dos dados.
+     */
+    public void cadastrar(Equipe equipe) {
+        String sqlEquipe = "INSERT INTO equipes (nome_equipe, descricao) VALUES (?, ?)";
+        String sqlUsuarioEquipe = "INSERT INTO usuario_equipe (id_usuario, id_equipe) VALUES (?, ?)";
+        
+        Connection conexao = null;
+        PreparedStatement stmtEquipe = null;
+        PreparedStatement stmtUsuarioEquipe = null;
+        ResultSet rs = null;
+
+        try {
+            conexao = new Conexao().getConexao();
+            // --- Início da Transação ---
+            // Desligamos o autocommit para controlar a transação manualmente.
+            conexao.setAutoCommit(false);
+
+            // 1. Inserir a equipe na tabela 'equipes'
+            // O segundo parâmetro informa ao JDBC que queremos as chaves geradas (o novo ID).
+            stmtEquipe = conexao.prepareStatement(sqlEquipe, Statement.RETURN_GENERATED_KEYS);
+            stmtEquipe.setString(1, equipe.getNome());
+            stmtEquipe.setString(2, equipe.getDescricao());
+            stmtEquipe.executeUpdate();
+
+            // 2. Recuperar o ID da equipe que acabamos de criar.
+            rs = stmtEquipe.getGeneratedKeys();
+            int idNovaEquipe = -1;
+            if (rs.next()) {
+                idNovaEquipe = rs.getInt(1);
+            }
+
+            if (idNovaEquipe != -1) {
+                // 3. Inserir os membros na tabela de junção 'usuario_equipe'
+                stmtUsuarioEquipe = conexao.prepareStatement(sqlUsuarioEquipe);
+                for (Usuario membro : equipe.getMembros()) {
+                    stmtUsuarioEquipe.setInt(1, membro.getId());
+                    stmtUsuarioEquipe.setInt(2, idNovaEquipe);
+                    stmtUsuarioEquipe.executeUpdate();
+                }
+            }
+            
+            // --- Fim da Transação ---
+            // Se tudo correu bem até aqui, confirmamos as operações.
+            conexao.commit();
+            System.out.println("Equipe e membros cadastrados com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao cadastrar equipe: " + e.getMessage());
+            try {
+                // Se deu erro, desfazemos tudo o que foi feito.
+                if (conexao != null) conexao.rollback();
+            } catch (SQLException ex) {
+                System.out.println("Erro ao reverter a transação: " + ex.getMessage());
+            }
+        } finally {
+            // No final, sempre reativamos o autocommit e fechamos tudo.
+            try {
+                if (rs != null) rs.close();
+                if (stmtEquipe != null) stmtEquipe.close();
+                if (stmtUsuarioEquipe != null) stmtUsuarioEquipe.close();
+                if (conexao != null) {
+                    conexao.setAutoCommit(true);
+                    conexao.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Lista todas as equipes e, para cada uma, busca seus respectivos membros.
+     * Este é um exemplo do padrão "N+1 Query".
+     */
+    public List<Equipe> listarTodos() {
+        List<Equipe> equipes = new ArrayList<>();
+        String sqlEquipes = "SELECT * FROM equipes";
+        String sqlMembros = "SELECT u.* FROM usuarios u JOIN usuario_equipe ue ON u.id_usuario = ue.id_usuario WHERE ue.id_equipe = ?";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmtEquipes = conexao.prepareStatement(sqlEquipes);
+             ResultSet rsEquipes = stmtEquipes.executeQuery()) {
+
+            // 1. Primeiro, buscamos todas as equipes
+            while (rsEquipes.next()) {
+                Equipe equipe = new Equipe();
+                equipe.setId(rsEquipes.getInt("id_equipe"));
+                equipe.setNome(rsEquipes.getString("nome_equipe"));
+                equipe.setDescricao(rsEquipes.getString("descricao"));
+
+                // 2. Para cada equipe encontrada, fazemos uma nova busca pelos seus membros
+                try (PreparedStatement stmtMembros = conexao.prepareStatement(sqlMembros)) {
+                    stmtMembros.setInt(1, equipe.getId());
+                    try (ResultSet rsMembros = stmtMembros.executeQuery()) {
+                        while (rsMembros.next()) {
+                            Usuario membro = new Usuario();
+                            membro.setId(rsMembros.getInt("id_usuario"));
+                            membro.setNomeCompleto(rsMembros.getString("nome_completo"));
+                            membro.setCargo(rsMembros.getString("cargo"));
+                            // Adicione outros campos do usuário se precisar
+                            equipe.adicionarMembro(membro);
+                        }
+                    }
+                }
+                equipes.add(equipe);
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao listar equipes: " + e.getMessage());
+        }
+        return equipes;
+    }
+    
+    // Métodos para ATUALIZAR e DELETAR uma equipe também seriam necessários aqui.
+    // Eles seguiriam uma lógica parecida, manipulando as duas tabelas (equipes e usuario_equipe).
+}

@@ -1,0 +1,97 @@
+package conexaodb;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AlocacaoDAO {
+
+    /**
+     * Busca todas as equipes associadas a um projeto específico.
+     * @param idProjeto O ID do projeto a ser consultado.
+     * @return Uma lista de objetos Equipe.
+     */
+    public List<Equipe> buscarEquipesPorProjeto(int idProjeto) {
+        List<Equipe> equipesAlocadas = new ArrayList<>();
+        String sql = "SELECT e.* FROM equipes e " +
+                     "JOIN projeto_equipe pe ON e.id_equipe = pe.id_equipe " +
+                     "WHERE pe.id_projeto = ?";
+
+        try (Connection conexao = new Conexao().getConexao();
+             PreparedStatement stmt = conexao.prepareStatement(sql)) {
+            
+            stmt.setInt(1, idProjeto);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Equipe equipe = new Equipe();
+                    equipe.setId(rs.getInt("id_equipe"));
+                    equipe.setNome(rs.getString("nome_equipe"));
+                    equipe.setDescricao(rs.getString("descricao"));
+                    equipesAlocadas.add(equipe);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Erro ao buscar equipes por projeto: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return equipesAlocadas;
+    }
+
+    /**
+     * Atualiza as alocações de um projeto.
+     * A estratégia é: apagar todas as associações existentes e inserir as novas.
+     * Isso é feito dentro de uma transação para garantir a consistência.
+     * @param idProjeto O ID do projeto cujas equipes serão atualizadas.
+     * @param novasEquipes A nova lista de equipes para este projeto.
+     */
+    public void atualizarAlocacoes(int idProjeto, List<Equipe> novasEquipes) {
+        String sqlDelete = "DELETE FROM projeto_equipe WHERE id_projeto = ?";
+        String sqlInsert = "INSERT INTO projeto_equipe (id_projeto, id_equipe) VALUES (?, ?)";
+
+        Connection conexao = null;
+        try {
+            conexao = new Conexao().getConexao();
+            // Inicia a transação
+            conexao.setAutoCommit(false);
+
+            // 1. Apaga todas as alocações antigas para este projeto
+            try (PreparedStatement stmtDelete = conexao.prepareStatement(sqlDelete)) {
+                stmtDelete.setInt(1, idProjeto);
+                stmtDelete.executeUpdate();
+            }
+
+            // 2. Insere as novas alocações
+            try (PreparedStatement stmtInsert = conexao.prepareStatement(sqlInsert)) {
+                for (Equipe equipe : novasEquipes) {
+                    stmtInsert.setInt(1, idProjeto);
+                    stmtInsert.setInt(2, equipe.getId());
+                    stmtInsert.executeUpdate();
+                }
+            }
+
+            // Se tudo deu certo, comita a transação
+            conexao.commit();
+            System.out.println("Alocações atualizadas com sucesso!");
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao atualizar alocações: " + e.getMessage());
+            try {
+                if (conexao != null) conexao.rollback(); // Desfaz em caso de erro
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+            try {
+                if (conexao != null) {
+                    conexao.setAutoCommit(true); // Reativa o autocommit
+                    conexao.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

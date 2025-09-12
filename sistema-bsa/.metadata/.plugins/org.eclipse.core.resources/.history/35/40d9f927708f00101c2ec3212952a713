@@ -1,0 +1,107 @@
+package conexaodb;
+
+// Precisamos importar a classe Date específica para SQL.
+import java.sql.Date;
+
+import model.Usuario;
+
+// Esta é a nossa "ficha de dados" para um Projeto.
+public class Projeto {
+
+    private int id;
+    private String nome;
+    private String descricao;
+    private Date dataInicio;
+    private Date dataTerminoPrevista;
+    private String status;
+    
+    // A grande novidade: um objeto Usuario inteiro para representar o gerente.
+    private Usuario gerente;
+
+    // A partir daqui, são apenas os Getters e Setters
+    // que a sua IDE pode gerar automaticamente.
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public Date getDataInicio() {
+        return dataInicio;
+    }
+
+    public void setDataInicio(Date dataInicio) {
+        this.dataInicio = dataInicio;
+    }
+
+    public Date getDataTerminoPrevista() {
+        return dataTerminoPrevista;
+    }
+
+    public void setDataTerminoPrevista(Date dataTerminoPrevista) {
+        this.dataTerminoPrevista = dataTerminoPrevista;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Usuario getGerente() {
+        return gerente;
+    }
+
+    public void setGerente(Usuario gerente) {
+        this.gerente = gerente;
+    }
+    
+    @Override
+    public String toString() {
+        // Dizemos que um objeto Projeto, quando exibido como texto, deve mostrar seu nome.
+        return this.getNome(); 
+    }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + id;
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Projeto other = (Projeto) obj;
+        if (id != other.id)
+            return false;
+        return true;
+    }
+}

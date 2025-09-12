@@ -1,0 +1,42 @@
+package conexaodb;
+
+import java.util.Scanner;
+
+public class Principal {
+
+    public static void main(String[] args) {
+        // O "gerente" continua pegando os dados.
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("--- Cadastro de Novo Usuário (Versão Organizada) ---");
+        
+        // 1. O gerente cria uma "ficha" em branco (objeto Usuario)
+        Usuario usuarioParaCadastrar = new Usuario();
+
+        // 2. O gerente preenche a ficha com os dados coletados
+        System.out.print("Nome completo: ");
+        usuarioParaCadastrar.setNomeCompleto(scanner.nextLine());
+
+        System.out.print("CPF: ");
+        usuarioParaCadastrar.setCpf(scanner.nextLine());
+
+        System.out.print("Email: ");
+        usuarioParaCadastrar.setEmail(scanner.nextLine());
+
+        System.out.print("Login: ");
+        usuarioParaCadastrar.setLogin(scanner.nextLine());
+
+        System.out.print("Senha: ");
+        usuarioParaCadastrar.setSenha(scanner.nextLine());
+        
+        usuarioParaCadastrar.setPerfil("colaborador");
+        
+        scanner.close();
+
+        // 3. O gerente contrata o especialista (cria o DAO)
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        
+        // 4. O gerente entrega a ficha preenchida para o especialista e manda ele trabalhar.
+        usuarioDAO.cadastrar(usuarioParaCadastrar);
+    }
+}

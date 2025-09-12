@@ -1,0 +1,63 @@
+package conexaodb;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel; // O "cérebro" da nossa tabela
+import java.util.List;
+
+public class TelaListaUsuarios extends JFrame {
+
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+
+    public TelaListaUsuarios() {
+        setTitle("Lista de Usuários");
+        setSize(800, 600); // Uma janela maior
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // DISPOSE_ON_CLOSE fecha só esta janela
+        setLocationRelativeTo(null); // Centraliza na tela
+
+        // 1. O Modelo da Tabela
+        // O DefaultTableModel é quem gerencia os dados: colunas, linhas, etc.
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("Nome Completo"); // Adiciona as colunas
+        modeloTabela.addColumn("CPF");
+        modeloTabela.addColumn("Email");
+        modeloTabela.addColumn("Cargo");
+        modeloTabela.addColumn("Login");
+
+        // 2. A Tabela (A parte visual)
+        // Criamos a JTable e dizemos que o cérebro dela é o modelo que acabamos de criar.
+        tabela = new JTable(modeloTabela);
+
+        // 3. Colocando a tabela em um painel com barra de rolagem
+        // É uma boa prática, pois se tivermos muitos usuários, a barra aparece.
+        JScrollPane painelRolagem = new JScrollPane(tabela);
+        
+        // Adicionamos o painel com a tabela à janela
+        add(painelRolagem);
+        
+        // 4. Carregar os dados do banco na tabela
+        carregarDados();
+
+        setVisible(true);
+    }
+    
+    private void carregarDados() {
+        // Limpa qualquer dado antigo que a tabela possa ter
+        modeloTabela.setRowCount(0);
+
+        // Contrata o especialista para buscar os dados no banco
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        List<Usuario> usuarios = usuarioDAO.listarTodos();
+
+        // Para cada usuário na lista, adiciona uma nova linha na tabela
+        for (Usuario u : usuarios) {
+            modeloTabela.addRow(new Object[]{
+                u.getNomeCompleto(),
+                u.getCpf(),
+                u.getEmail(),
+                u.getCargo(),
+                u.getLogin()
+            });
+        }
+    }
+}

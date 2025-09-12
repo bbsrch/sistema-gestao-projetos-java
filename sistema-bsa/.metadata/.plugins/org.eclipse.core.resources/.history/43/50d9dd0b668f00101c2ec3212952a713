@@ -1,0 +1,8 @@
+package conexaodb;
+
+public class Principal {
+    public static void main(String[] args) {
+        // Para testar, vamos abrir o relatório diretamente.
+        new TelaRelatorioAtrasos();
+    }
+}

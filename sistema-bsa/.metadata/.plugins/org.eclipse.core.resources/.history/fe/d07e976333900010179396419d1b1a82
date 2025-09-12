@@ -1,0 +1,131 @@
+package view;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import dao.ProjetoDAO;
+import model.Projeto;
+import model.Usuario;
+
+import java.awt.*;
+import java.util.List;
+
+
+public class TelaListaProjetos extends JFrame {
+
+    private DefaultTableModel modeloTabela;
+    private JTable tabela;
+    private JButton botaoNovo, botaoEditar, botaoExcluir;
+    private ProjetoDAO projetoDAO;
+    private Usuario usuarioLogado;
+
+    public TelaListaProjetos(Usuario usuario) { 
+        this.usuarioLogado = usuario; 
+
+        setTitle("Gerenciamento de Projetos - Logado como: " + usuarioLogado.getNomeCompleto());
+        setSize(900, 600);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);;
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        projetoDAO = new ProjetoDAO();
+
+
+        // --- Tabela ---
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("ID");
+        modeloTabela.addColumn("Nome do Projeto");
+        modeloTabela.addColumn("Gerente Responsável");
+        modeloTabela.addColumn("Status");
+        modeloTabela.addColumn("Término Previsto");
+
+        tabela = new JTable(modeloTabela);
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        // --- Painel de Botões ---
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        botaoNovo = new JButton("Novo Projeto");
+        botaoEditar = new JButton("Editar Selecionado");
+        botaoExcluir = new JButton("Excluir Selecionado");
+        painelBotoes.add(botaoNovo);
+        painelBotoes.add(botaoEditar);
+        painelBotoes.add(botaoExcluir);
+        add(painelBotoes, BorderLayout.SOUTH);
+
+        // --- Lógica dos Botões ---
+        
+        botaoNovo.addActionListener(e -> {
+            TelaCadastroProjeto telaCadastro = new TelaCadastroProjeto();
+            telaCadastro.setVisible(true);
+        });
+        
+        botaoExcluir.addActionListener(e -> {
+            int linhaSelecionada = tabela.getSelectedRow();
+            if (linhaSelecionada == -1) {
+                JOptionPane.showMessageDialog(this, "Selecione um projeto para excluir.");
+                return;
+            }
+            
+            int idProjeto = (int) tabela.getValueAt(linhaSelecionada, 0);
+            int confirmacao = JOptionPane.showConfirmDialog(this, "Tem certeza?", "Confirmar exclusão", JOptionPane.YES_NO_OPTION);
+            
+            if (confirmacao == JOptionPane.YES_OPTION) {
+                projetoDAO.deletar(idProjeto);
+                carregarDados(); 
+            }
+        });
+        
+        botaoEditar.addActionListener(e -> {
+            int linhaSelecionada = tabela.getSelectedRow();
+            if (linhaSelecionada == -1) {
+                JOptionPane.showMessageDialog(this, "Selecione um projeto para editar.");
+                return;
+            }
+            
+            int idProjeto = (int) tabela.getValueAt(linhaSelecionada, 0);
+            List<Projeto> projetos = projetoDAO.listarTodos();
+            Projeto projetoParaEditar = null;
+            for (Projeto p : projetos) {
+                if (p.getId() == idProjeto) {
+                    projetoParaEditar = p;
+                    break;
+                }
+            }
+            
+            if (projetoParaEditar != null) {
+                TelaCadastroProjeto telaEdicao = new TelaCadastroProjeto(projetoParaEditar);
+                telaEdicao.setVisible(true);
+            }
+        });
+
+        configurarAcessos();
+
+        carregarDados(); 
+        setVisible(true);
+    }
+    
+    private void configurarAcessos() {
+        String perfil = usuarioLogado.getPerfil();
+        
+        if (perfil.equals("colaborador")) {
+            botaoNovo.setVisible(false);
+            botaoEditar.setVisible(false);
+            botaoExcluir.setVisible(false);
+        }
+    }
+
+    private void carregarDados() {
+        modeloTabela.setRowCount(0);
+        List<Projeto> projetos = projetoDAO.listarTodos();
+
+        for (Projeto p : projetos) {
+            modeloTabela.addRow(new Object[]{
+                p.getId(),
+                p.getNome(),
+                p.getGerente().getNomeCompleto(), 
+                p.getStatus(),
+                p.getDataTerminoPrevista()
+            });
+        }
+    }
+}

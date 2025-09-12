@@ -1,0 +1,115 @@
+package model;
+
+//Esta classe é apenas um "molde" para representar um usuário.
+//Não tem lógica, só campos (variáveis) para guardar os dados.
+public class Usuario {
+
+ // Os campos são "private" para proteger os dados.
+ // Ninguém de fora pode alterá-los diretamente.
+ private String nomeCompleto;
+ private String cpf;
+ private String email;
+ private String cargo;
+ private String login;
+ private String senha;
+ private String perfil;
+ private int id;
+
+ // A partir daqui, temos os métodos "Getters" e "Setters".
+ // Getters: Servem para "pegar" o valor de um campo.
+ // Setters: Servem para "definir" um valor para um campo.
+ // É a forma correta e segura de acessar os dados.
+
+ public String getNomeCompleto() {
+     return nomeCompleto;
+ }
+
+ public void setNomeCompleto(String nomeCompleto) {
+     this.nomeCompleto = nomeCompleto;
+ }
+
+ public String getCpf() {
+     return cpf;
+ }
+
+ public void setCpf(String cpf) {
+     this.cpf = cpf;
+ }
+
+ public String getEmail() {
+     return email;
+ }
+
+ public void setEmail(String email) {
+     this.email = email;
+ }
+
+ public String getCargo() {
+	   return cargo;
+ }
+
+ public void setCargo(String cargo) {
+	   this.cargo = cargo;
+ }
+ 
+ public String getLogin() {
+     return login;
+ }
+
+ public void setLogin(String login) {
+     this.login = login;
+ }
+
+ public String getSenha() {
+     return senha;
+ }
+
+ public void setSenha(String senha) {
+     this.senha = senha;
+ }
+
+ public String getPerfil() {
+     return perfil;
+ }
+
+ public void setPerfil(String perfil) {
+     this.perfil = perfil;
+ }
+ 
+ public int getId() {
+	 return id;
+}
+
+public void setId(int id) {
+	this.id = id;
+}
+
+@Override
+public String toString() {
+  // É aqui que dizemos que, sempre que um objeto Usuario precisar ser
+  // exibido como um texto, ele deve mostrar o nome completo.
+  return this.getNomeCompleto(); 
+}
+
+@Override
+public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + id;
+    return result;
+}
+
+@Override
+public boolean equals(Object obj) {
+    if (this == obj)
+        return true;
+    if (obj == null)
+        return false;
+    if (getClass() != obj.getClass())
+        return false;
+    Usuario other = (Usuario) obj;
+    if (id != other.id)
+        return false;
+    return true;
+}
+}

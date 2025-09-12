@@ -1,0 +1,150 @@
+package conexaodb;
+
+import javax.swing.*;
+
+import dao.UsuarioDAO;
+import model.Usuario;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class TelaCadastroUsuario extends JFrame {
+
+    // Componentes da tela
+    private JLabel labelNome, labelCpf, labelEmail, labelCargo, labelLogin, labelSenha;
+    private JTextField campoNome, campoCpf, campoEmail, campoCargo, campoLogin, campoSenha;
+    private JButton botaoSalvar;
+    private JLabel labelPerfil;
+    private JComboBox<String> comboPerfil;
+
+    // Variável para controlar o modo (cadastro ou edição)
+    private Usuario usuarioParaEditar;
+
+    // Construtor Padrão (para criar um novo usuário)
+    public TelaCadastroUsuario() {
+        inicializarComponentes(); // Monta a tela
+        setTitle("Cadastro de Novo Usuário");
+        setVisible(true);
+    }
+
+    // Construtor de Edição (para editar um usuário existente)
+    public TelaCadastroUsuario(Usuario usuario) {
+        inicializarComponentes(); // Monta a tela
+        setTitle("Editar Usuário"); // Define o título para o modo de edição
+
+        this.usuarioParaEditar = usuario; // Guarda o usuário que estamos editando
+
+        // Preenche os campos com os dados do usuário
+        campoNome.setText(usuario.getNomeCompleto());
+        campoCpf.setText(usuario.getCpf());
+        campoCpf.setEditable(false); // Impede a edição do CPF, que é nossa chave
+        campoEmail.setText(usuario.getEmail());
+        campoCargo.setText(usuario.getCargo());
+        campoLogin.setText(usuario.getLogin());
+        campoSenha.setText(usuario.getSenha());
+        setVisible(true);
+        comboPerfil.setSelectedItem(usuario.getPerfil());
+    }
+
+    // Método privado que monta a janela e todos os componentes.
+    // Agora é chamado pelos dois construtores.
+    private void inicializarComponentes() {
+        setSize(400, 380); // Aumentei a altura para caber o novo campo
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        // --- Campos existentes ---
+        labelNome = new JLabel("Nome:");
+        labelNome.setBounds(20, 20, 80, 25);
+        add(labelNome);
+        campoNome = new JTextField();
+        campoNome.setBounds(100, 20, 250, 25);
+        add(campoNome);
+
+        labelCpf = new JLabel("CPF:");
+        labelCpf.setBounds(20, 55, 80, 25);
+        add(labelCpf);
+        campoCpf = new JTextField();
+        campoCpf.setBounds(100, 55, 250, 25);
+        add(campoCpf);
+
+        labelEmail = new JLabel("E-mail:");
+        labelEmail.setBounds(20, 90, 80, 25);
+        add(labelEmail);
+        campoEmail = new JTextField();
+        campoEmail.setBounds(100, 90, 250, 25);
+        add(campoEmail);
+
+        labelCargo = new JLabel("Cargo:");
+        labelCargo.setBounds(20, 125, 80, 25);
+        add(labelCargo);
+        campoCargo = new JTextField();
+        campoCargo.setBounds(100, 125, 250, 25);
+        add(campoCargo);
+
+        // --- NOVO CAMPO DE PERFIL ---
+        labelPerfil = new JLabel("Perfil:");
+        labelPerfil.setBounds(20, 160, 80, 25);
+        add(labelPerfil);
+        String[] perfis = {"colaborador", "gerente", "administrador"};
+        comboPerfil = new JComboBox<>(perfis);
+        comboPerfil.setBounds(100, 160, 250, 25);
+        add(comboPerfil);
+
+        labelLogin = new JLabel("Login:");
+        labelLogin.setBounds(20, 195, 80, 25);
+        add(labelLogin);
+        campoLogin = new JTextField();
+        campoLogin.setBounds(100, 195, 250, 25);
+        add(campoLogin);
+
+        labelSenha = new JLabel("Senha:");
+        labelSenha.setBounds(20, 230, 80, 25);
+        add(labelSenha);
+        campoSenha = new JPasswordField(); // Usar JPasswordField é uma boa prática
+        campoSenha.setBounds(100, 230, 250, 25);
+        add(campoSenha);
+
+        // Botão Salvar
+        botaoSalvar = new JButton("Salvar");
+        botaoSalvar.setBounds(150, 280, 100, 30);
+        add(botaoSalvar);
+
+        // --- Lógica do Botão ---
+        botaoSalvar.addActionListener(e -> {
+            // Cria um objeto Usuario e preenche com os dados da tela
+            Usuario usuario = new Usuario();
+            usuario.setNomeCompleto(campoNome.getText());
+            usuario.setCpf(campoCpf.getText());
+            usuario.setEmail(campoEmail.getText());
+            usuario.setCargo(campoCargo.getText());
+            usuario.setLogin(campoLogin.getText());
+            // A senha deve ser obtida de um JPasswordField
+            if (campoSenha instanceof JPasswordField) {
+                usuario.setSenha(new String(((JPasswordField) campoSenha).getPassword()));
+            } else {
+                usuario.setSenha(campoSenha.getText());
+            }
+
+         // --- A MUDANÇA PRINCIPAL ---
+            // Em vez de "colaborador", pegamos o item selecionado.
+            usuario.setPerfil((String) comboPerfil.getSelectedItem());
+            
+            UsuarioDAO dao = new UsuarioDAO();
+
+            // AQUI ESTÁ A LÓGICA PRINCIPAL - AGORA VAI FUNCIONAR
+            if (usuarioParaEditar == null) {
+                // Modo CADASTRO
+                dao.cadastrar(usuario); // O cadastrar já faz o hashing da senha
+                JOptionPane.showMessageDialog(this, "Usuário cadastrado com sucesso!");
+            } else {
+                // Modo EDIÇÃO
+                dao.atualizar(usuario);
+                JOptionPane.showMessageDialog(this, "Usuário atualizado com sucesso!");
+            }
+
+            this.dispose();
+        });
+    }
+}

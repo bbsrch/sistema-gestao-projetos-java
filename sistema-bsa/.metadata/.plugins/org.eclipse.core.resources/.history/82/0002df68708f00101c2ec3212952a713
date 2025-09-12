@@ -1,0 +1,161 @@
+package conexaodb;
+
+import com.toedter.calendar.JDateChooser;
+
+import model.Projeto;
+import model.Tarefa;
+import model.Usuario;
+
+import javax.swing.*;
+import java.util.List;
+
+public class TelaCadastroTarefa extends JFrame {
+
+    // --- Componentes ---
+    private JTextField campoTitulo;
+    private JTextArea campoDescricao;
+    private JComboBox<String> comboStatus;
+    private JDateChooser campoDataInicioPrev, campoDataFimPrev;
+    private JComboBox<Projeto> comboProjetos;
+    private JComboBox<Usuario> comboResponsaveis;
+    private JButton botaoSalvar;
+    private Tarefa tarefaParaEditar;
+
+    public TelaCadastroTarefa() {
+        setTitle("Cadastro de Nova Tarefa");
+        setSize(550, 450);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLayout(null);
+        setLocationRelativeTo(null);
+
+        // --- Título ---
+        add(new JLabel("Título:")).setBounds(20, 20, 150, 25);
+        campoTitulo = new JTextField();
+        campoTitulo.setBounds(180, 20, 320, 25);
+        add(campoTitulo);
+
+        // --- Descrição ---
+        add(new JLabel("Descrição:")).setBounds(20, 60, 150, 25);
+        campoDescricao = new JTextArea();
+        add(new JScrollPane(campoDescricao)).setBounds(180, 60, 320, 80);
+        
+        // --- Datas Previstas ---
+        add(new JLabel("Data Início Prevista:")).setBounds(20, 150, 150, 25);
+        campoDataInicioPrev = new JDateChooser();
+        campoDataInicioPrev.setBounds(180, 150, 150, 25);
+        add(campoDataInicioPrev);
+        
+        add(new JLabel("Data Fim Prevista:")).setBounds(20, 185, 150, 25);
+        campoDataFimPrev = new JDateChooser();
+        campoDataFimPrev.setBounds(180, 185, 150, 25);
+        add(campoDataFimPrev);
+
+        // --- Status ---
+        add(new JLabel("Status:")).setBounds(20, 220, 150, 25);
+        String[] statusOptions = {"pendente", "em execução", "concluída"};
+        comboStatus = new JComboBox<>(statusOptions);
+        comboStatus.setBounds(180, 220, 150, 25);
+        add(comboStatus);
+        
+        // --- Projeto Vinculado ---
+        add(new JLabel("Projeto Vinculado:")).setBounds(20, 255, 150, 25);
+        comboProjetos = new JComboBox<>();
+        comboProjetos.setBounds(180, 255, 320, 25);
+        add(comboProjetos);
+        
+        // --- Responsável ---
+        add(new JLabel("Responsável:")).setBounds(20, 290, 150, 25);
+        comboResponsaveis = new JComboBox<>();
+        comboResponsaveis.setBounds(180, 290, 320, 25);
+        add(comboResponsaveis);
+
+        // --- Botão Salvar ---
+        botaoSalvar = new JButton("Salvar Tarefa");
+        botaoSalvar.setBounds(200, 350, 150, 30);
+        add(botaoSalvar);
+
+        // --- Carregar dados dinâmicos ---
+        carregarProjetos();
+        carregarResponsaveis();
+
+        // --- Lógica do Botão ---
+        botaoSalvar.addActionListener(e -> {
+            // Coleta os dados dos campos
+            String titulo = campoTitulo.getText();
+            String descricao = campoDescricao.getText();
+            String status = (String) comboStatus.getSelectedItem();
+            java.sql.Date dataInicio = (campoDataInicioPrev.getDate() != null) ? new java.sql.Date(campoDataInicioPrev.getDate().getTime()) : null;
+            java.sql.Date dataFim = (campoDataFimPrev.getDate() != null) ? new java.sql.Date(campoDataFimPrev.getDate().getTime()) : null;
+            Projeto projeto = (Projeto) comboProjetos.getSelectedItem();
+            Usuario responsavel = (Usuario) comboResponsaveis.getSelectedItem();
+
+            TarefaDAO tarefaDAO = new TarefaDAO();
+
+            if (tarefaParaEditar == null) {
+                // --- MODO CADASTRO ---
+                Tarefa novaTarefa = new Tarefa();
+                novaTarefa.setTitulo(titulo);
+                novaTarefa.setDescricao(descricao);
+                novaTarefa.setStatus(status);
+                novaTarefa.setDataInicioPrevista(dataInicio);
+                novaTarefa.setDataFimPrevista(dataFim);
+                novaTarefa.setProjeto(projeto);
+                novaTarefa.setResponsavel(responsavel);
+
+                tarefaDAO.cadastrar(novaTarefa);
+                JOptionPane.showMessageDialog(this, "Tarefa cadastrada com sucesso!");
+            } else {
+                // --- MODO EDIÇÃO ---
+                tarefaParaEditar.setTitulo(titulo);
+                tarefaParaEditar.setDescricao(descricao);
+                tarefaParaEditar.setStatus(status);
+                tarefaParaEditar.setDataInicioPrevista(dataInicio);
+                tarefaParaEditar.setDataFimPrevista(dataFim);
+                tarefaParaEditar.setProjeto(projeto);
+                tarefaParaEditar.setResponsavel(responsavel);
+                // Poderíamos adicionar campos para as datas reais também
+
+                tarefaDAO.atualizar(tarefaParaEditar);
+                JOptionPane.showMessageDialog(this, "Tarefa atualizada com sucesso!");
+            }
+
+            this.dispose();
+        });
+
+        setVisible(true);
+    }
+    
+    // Construtor de Edição
+    public TelaCadastroTarefa(Tarefa tarefa) {
+        this(); // Chama o construtor padrão para montar a tela
+        setTitle("Editar Tarefa");
+        this.tarefaParaEditar = tarefa;
+
+        // Preenche os campos com os dados da tarefa
+        campoTitulo.setText(tarefa.getTitulo());
+        campoDescricao.setText(tarefa.getDescricao());
+        campoDataInicioPrev.setDate(tarefa.getDataInicioPrevista());
+        campoDataFimPrev.setDate(tarefa.getDataFimPrevista());
+        comboStatus.setSelectedItem(tarefa.getStatus());
+
+        // As JComboBoxes usarão os métodos 'equals' para selecionar os itens corretos
+        comboProjetos.setSelectedItem(tarefa.getProjeto());
+        comboResponsaveis.setSelectedItem(tarefa.getResponsavel());
+    }
+
+    private void carregarProjetos() {
+        ProjetoDAO projetoDAO = new ProjetoDAO();
+        List<Projeto> projetos = projetoDAO.listarTodos();
+        for (Projeto p : projetos) {
+            comboProjetos.addItem(p);
+        }
+    }
+
+    private void carregarResponsaveis() {
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        List<Usuario> usuarios = usuarioDAO.listarTodos();
+        for (Usuario u : usuarios) {
+            comboResponsaveis.addItem(u);
+        }
+    }
+}

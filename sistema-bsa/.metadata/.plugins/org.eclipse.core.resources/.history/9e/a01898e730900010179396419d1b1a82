@@ -1,0 +1,24 @@
+package util;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class Conexao {
+
+ // Método que vai tentar se conectar ao banco e te devolver a conexão
+ public Connection getConexao() {
+     try {
+         Connection conexao = DriverManager.getConnection(
+             "jdbc:mysql://localhost:3306/gestao_projetos", // Endereço do banco
+             "root", // Usuário do banco; geralmente "root"
+             "Puberty2."   // Senha do banco
+         );
+         return conexao;
+     
+     } catch (SQLException e) {
+         System.out.println("Erro ao conectar com o banco de dados: " + e.getMessage());
+         return null;
+     }
+ }
+}

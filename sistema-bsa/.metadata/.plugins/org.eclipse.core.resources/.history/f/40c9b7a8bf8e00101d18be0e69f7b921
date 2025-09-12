@@ -1,0 +1,11 @@
+package conexaodb;
+
+public class Principal {
+    public static void main(String[] args) {
+        // Por enquanto, vamos abrir diretamente a tela de lista para testar.
+        new TelaCadastroProjeto();
+        
+        // Mais tarde, podemos criar um menu principal que abre a tela de cadastro
+        // ou a tela de listagem.
+    }
+}

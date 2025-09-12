@@ -1,0 +1,47 @@
+package conexaodb;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+import dao.ProjetoDAO;
+import model.ResumoProjetosStatus;
+
+import java.awt.*;
+import java.util.List;
+
+public class TelaRelatorioStatus extends JFrame {
+
+    private JTable tabela;
+    private DefaultTableModel modeloTabela;
+
+    public TelaRelatorioStatus() {
+        setTitle("Relatório - Resumo de Andamento dos Projetos");
+        setSize(500, 300);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
+
+        modeloTabela = new DefaultTableModel();
+        modeloTabela.addColumn("Status do Projeto");
+        modeloTabela.addColumn("Quantidade de Projetos");
+
+        tabela = new JTable(modeloTabela);
+        add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        carregarDados();
+        
+        setVisible(true);
+    }
+
+    private void carregarDados() {
+        ProjetoDAO projetoDAO = new ProjetoDAO();
+        List<ResumoProjetosStatus> resumo = projetoDAO.gerarResumoStatus();
+
+        for (ResumoProjetosStatus item : resumo) {
+            modeloTabela.addRow(new Object[]{
+                item.getStatus(),
+                item.getQuantidade()
+            });
+        }
+    }
+}
