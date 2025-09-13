@@ -7,7 +7,9 @@ A aplicação permite o cadastro e controle de todas as entidades de um ciclo de
 
 ## 📸 Screenshots
 
-*(`![Tela de login](caminho/da/imagem.png)`)*
+![Tela de login](https://github.com/bbsrch/sistema-gestao-projetos-java/blob/main/prints/login.png)
+![Tela de equipes](https://github.com/bbsrch/sistema-gestao-projetos-java/blob/main/prints/equipes.png)
+![Tela de usuários](https://github.com/bbsrch/sistema-gestao-projetos-java/blob/main/prints/usuarios.png)
   
 ---
 
