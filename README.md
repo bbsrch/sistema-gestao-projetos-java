@@ -198,7 +198,7 @@ O código-fonte está organizado seguindo padrões de mercado para facilitar a m
 
 André Barbosa da Rocha [(@bbsrch)](https://github.com/bbsrch)
 
-Bruno Camilo Gouveia [(@brunodev)](https://github.com/)
+Bruno Camilo Gouveia [(@BrunoCamilo-dev)](https://github.com/BrunoCamilo-dev)
 
 Samuel Menchon Bermonte [(@samumecbe)](https://github.com/)
 
