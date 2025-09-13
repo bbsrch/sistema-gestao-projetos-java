@@ -150,6 +150,58 @@ CREATE TABLE `projeto_equipe` (
   CONSTRAINT `projeto_equipe_ibfk_2` FOREIGN KEY (`id_equipe`) REFERENCES `equipes` (`id_equipe`)
 );
 ```
+---
 
+### 2. Configuração da Conexão
+No código-fonte, localize o arquivo `src/util/Conexao.java` e altere os dados de usuário e senha para sua configuração local:
 
+```java
+// Dentro da classe Conexao.java
+Connection conexao = DriverManager.getConnection(
+   "jdbc:mysql://localhost:3306/gestao_projetos", // Endereço do banco
+   "root", // Usuário do banco
+   "0000"  // Senha do banco
+);
+```
+---
 
+### 3. Executando a Aplicação
+1. Clone ou faça o download deste repositório.
+
+2. Importe o projeto na sua IDE.
+
+3. Adicione os arquivos `.jar` necessários (MySQL Connector, jBCrypt, JCalendar) ao Build Path do projeto.
+
+4. Execute o método `main` da classe `Principal.java` (pacote `main`).
+
+Dica: Para o **primeiro acesso**, pode ser necessário criar um usuário administrador **diretamente no banco de dados**.
+
+---
+
+## 🏛️ Estrutura do Projeto
+
+O código-fonte está organizado seguindo padrões de mercado para facilitar a manutenção:
+
+- main: Classe principal que inicia a aplicação.
+
+- model: Classes que representam as entidades do sistema (Usuário, Projeto, etc.).
+
+- dao: Data Access Objects – comunicação com o banco de dados.
+
+- view: Telas e componentes da interface gráfica (Swing).
+
+- util: Classes utilitárias (como conexão com o banco).
+
+---
+
+## 👨‍💻 Autores
+
+André Barbosa da Rocha [(@bbsrch)](https://github.com/bbsrch)
+
+Bruno Camilo Gouveia [(@brunodev)](https://github.com/)
+
+Samuel Menchon Bermonte [(@samumecbe)](https://github.com/)
+
+---
+
+Projeto desenvolvido como parte da avaliação A3 para a disciplina de Análise e Desenvolvimento de Sistemas na Universidade Anhembi Morumbi.
