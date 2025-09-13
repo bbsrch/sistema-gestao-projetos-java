@@ -200,7 +200,7 @@ André Barbosa da Rocha ([@bbsrch](https://github.com/bbsrch))
 
 Bruno Camilo Gouveia ([@BrunoCamilo-dev](https://github.com/BrunoCamilo-dev))
 
-Samuel Menchon Bermonte ([@samumecbe](https://github.com/))
+Samuel Menchon Bermonte ([@samuel-menchon](https://github.com/samuel-menchon))
 
 ---
 
